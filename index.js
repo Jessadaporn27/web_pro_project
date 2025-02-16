@@ -68,5 +68,40 @@ app.get('/login_get', function (req, res) {
 
 
 app.get('/registercustomers', function (req, res) {
-    res.sendFile(path.join(__dirname, "/home.html"));
+    res.render('regcustomers');
+});
+app.get('/getcustomers', function (req, res) {
+    let formdata = {
+        first_name: req.query.first_name,
+        last_name: req.query.last_name,
+        phone: req.query.phone,
+        email: req.query.email,
+        add: req.query.address,
+        dob: req.query.dob,
+        gender: req.query.gender
+    };
+    console.log(formdata); 
+    let sql = `INSERT INTO customers (first_name, last_name, phone, email, address, dob, gender) 
+    VALUES ('${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
+     '${formdata.add}', '${formdata.dob}', '${formdata.gender}');
+  `;
+     console.log(sql);
+    db.run(sql, (err) => {
+        if (err) {
+            return console.error('Error inserting data:', err.message);
+        }
+        console.log('Data inserted successful');        
+    });
+})
+
+app.get('/show', function (req, res) {
+    const sql = 'SELECT * FROM customers;';
+    
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
+    });
 });
