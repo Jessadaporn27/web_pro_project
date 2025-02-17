@@ -15,5 +15,6 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
-  "description": ""
+  "description": "ขั้นตอนการใช้งานเว็บ:",
+  "devDependencies": {}
 }

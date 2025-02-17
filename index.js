@@ -67,7 +67,7 @@ app.get('/login_get', function (req, res) {
         const sql2 = 'SELECT * FROM users WHERE username = ' + "'" + params[1] + "'" + ';';
         log(sql2);
 
-        db.all(sql2, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        db.all(sql2, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว 
             if (err) {
                 console.error(err);
                 return res.status(500).send("Database error");
