@@ -6,7 +6,7 @@ const port = 3000;
 const sqlite3 = require('sqlite3').verbose();
 
 // Connect to SQLite database
-let db = new sqlite3.Database('dentistry.db', (err) => {
+let db = new sqlite3.Database('dental_clinic.db', (err) => {
     if (err) {
         return console.error(err.message);
     }
