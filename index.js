@@ -1,3 +1,4 @@
+const { log } = require('console');
 const express = require('express');
 const path = require('path');
 const app = express();
@@ -19,13 +20,13 @@ app.set('view engine', 'ejs');
 
 app.listen(port, () => {
     console.log(`listening to port ${port}`);
-}); 
+});
 
 app.get('/', function (req, res) {
     res.render('home');
 });
 
-app.get('/register', function (req, res){
+app.get('/register', function (req, res) {
     res.render('register');
 });
 
@@ -62,7 +63,19 @@ app.get('/login_get', function (req, res) {
             return res.json({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" });
         }
 
-        res.json({ status: "success", message: `ล็อกอินสำเร็จด้วย ${formdata.loginType}` });
+
+        const sql2 = 'SELECT * FROM users WHERE username = ' + "'" + params[1] + "'" + ';';
+        log(sql2);
+
+        db.all(sql2, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Database error");
+            }
+            res.render('main', { data: results }); // ส่งข้อมูลไปที่ view
+        });
+        //res.render('main', { data: user });
+        //res.json({ status: "success", message: `ล็อกอินสำเร็จด้วย ${formdata.loginType}` });
     });
 });
 
@@ -80,23 +93,23 @@ app.get('/getcustomers', function (req, res) {
         dob: req.query.dob,
         gender: req.query.gender
     };
-    console.log(formdata); 
+    console.log(formdata);
     let sql = `INSERT INTO customers (first_name, last_name, phone, email, address, dob, gender) 
-    VALUES ('${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
-     '${formdata.add}', '${formdata.dob}', '${formdata.gender}');
-  `;
-     console.log(sql);
+        VALUES ('${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
+        '${formdata.add}', '${formdata.dob}', '${formdata.gender}');
+    `;
+    console.log(sql);
     db.run(sql, (err) => {
         if (err) {
             return console.error('Error inserting data:', err.message);
         }
-        console.log('Data inserted successful');        
+        console.log('Data inserted successful');
     });
 })
 
 app.get('/show', function (req, res) {
     const sql = 'SELECT * FROM customers;';
-    
+
     db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
         if (err) {
             console.error(err);
