@@ -118,3 +118,23 @@ app.get('/show', function (req, res) {
         res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
+
+app.get('/edit', function (req, res) {
+    const sql = 'SELECT * FROM customers;';
+
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('edit', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
+
+app.get('/get_edit', function (req, res) {
+    //coding
+});
+
+app.get('/get_delete', function (req, res) {
+    //coding
+});
