@@ -150,3 +150,38 @@ app.get('/get_edit', function (req, res) {
 app.get('/get_delete', function (req, res) {
     //coding
 });
+
+app.get('/viewappointments', function (req, res) {
+    const sql = 'SELECT * FROM appointments;';
+
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
+
+app.post('/send-notification', (req, res) => {
+    console.log("Received Data:", req.body);
+    const { customer_id, appointment_id, message } = req.body;
+    
+    const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
+    db.all(sql, [customer_id, appointment_id, message], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true, message: '📨 แจ้งเตือนสำเร็จ' });
+    });
+});
+
+app.get('/get-notifications', (req, res) => {
+    const sql = "SELECT * FROM notifications ORDER BY created_at DESC";
+    db.all(sql, (err, results) => {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json(results);
+    });
+});
