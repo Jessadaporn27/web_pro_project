@@ -118,3 +118,14 @@ app.get('/show', function (req, res) {
         res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
+
+app.get('/alert', function (req, res) {
+    const sql = 'select * from customers cross join appointments where appointments.customer_id = customers.customer_id;';
+    db.all(sql, [], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('alert', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
