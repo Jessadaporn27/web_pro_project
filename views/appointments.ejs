@@ -1,0 +1,41 @@
+<%- include("headtable") %>
+
+
+<body>
+
+    <div class="container">
+        <h1>Appointment List</h1>
+        <div class="table-container">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Appointment ID</th>
+                        <th>Customer ID</th>
+                        <th>Dentist ID</th>
+                        <th>Employee ID</th>
+                        <th>Appointment Date</th>
+                        <th>Appointment Time</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% data.forEach((item) => { %>
+                        <tr>
+                            <td><%= item.appointment_id %></td>
+                            <td><%= item.customer_id %></td>
+                            <td><%= item.dentist_id %></td>
+                            <td><%= item.employee_id%></td>
+                            <td><%= item.appointment_date%></td>
+                            <td><%= item.appointment_time %></td>
+                            <td><%= item.status %></td>
+                            <td><%= item.notes%></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
