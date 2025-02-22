@@ -17,6 +17,7 @@ let db = new sqlite3.Database('dental_clinic.db', (err) => {
 app.use(express.static('public'));
 // Set EJS as templating engine
 app.set('view engine', 'ejs');
+app.use(express.json());
 
 app.listen(port, () => {
     console.log(`listening to port ${port}`);
@@ -119,6 +120,17 @@ app.get('/show', function (req, res) {
     });
 });
 
+app.get('/alert', function (req, res) {
+    const sql = 'select * from customers cross join appointments where appointments.customer_id = customers.customer_id;';
+    db.all(sql, [], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('alert', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
+
 app.get('/edit', function (req, res) {
     const sql = 'SELECT * FROM customers;';
 
@@ -137,16 +149,4 @@ app.get('/get_edit', function (req, res) {
 
 app.get('/get_delete', function (req, res) {
     //coding
-});
-
-app.get('/viewappointments', function (req, res) {
-    const sql = 'SELECT * FROM appointments;';
-
-    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
-        }
-        res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
-    });
 });

@@ -7,22 +7,25 @@
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
+                        <th>Appointment ID</th>
+                        <th>Customer ID</th>
+                        <th>Name</th>
                         <th>Date</th>
+                        <th>Status</th>
+                        <th>Note</th>
                         <th>Alert</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% data.forEach((item) => { %>
                     <tr>
-                        <td><%= item.first_name %></td>
-                        <td><%= item.last_name %></td>
-                        <td><%= item.phone %></td>
-                        <td><%= item.date %></td> <!-- เวลานัดหมอ -->
-                        <td><button type="button" class="btn btn-primary" onclick="alert()">Alert</button></td>
+                        <td><%= item.appointment_id %></td>
+                        <td><%= item.customer_id %></td>
+                        <td><%= item.first_name %> <%= item.last_name %></td>
+                        <td><%= item.appointment_date %>|   <%= item.appointment_time %></td> <!-- เวลานัดหมอ -->
+                        <td><%= item.status %></td>
+                        <td><%= item.notes %></td>
+                        <td><button type="button" class="btn btn-primary" onclick="sendAlert(<%= item.customer_id %>, <%= item.appointment_id %>)">Alert</button></td>
                     </tr>
                     <% }); %>
                 </tbody>
@@ -30,8 +33,24 @@
         </div>
     </div>
     <script>
-        function alert(){
-            
+        function sendAlert(customer_id, appointment_id) {
+            const message = prompt("กรอกข้อความแจ้งเตือน:");
+            if (!message) return;
+
+            fetch('/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customer_id, appointment_id, message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("แจ้งเตือนสำเร็จ!");
+                } else {
+                    alert("มีข้อผิดพลาด!");
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
