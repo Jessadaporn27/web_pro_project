@@ -17,6 +17,7 @@ let db = new sqlite3.Database('dental_clinic.db', (err) => {
 app.use(express.static('public'));
 // Set EJS as templating engine
 app.set('view engine', 'ejs');
+app.use(express.json());
 
 app.listen(port, () => {
     console.log(`listening to port ${port}`);
@@ -148,4 +149,27 @@ app.get('/get_edit', function (req, res) {
 
 app.get('/get_delete', function (req, res) {
     //coding
+});
+
+app.post('/send-notification', (req, res) => {
+    console.log("Received Data:", req.body);
+    const { customer_id, appointment_id, message } = req.body;
+    
+    const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
+    db.all(sql, [customer_id, appointment_id, message], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true, message: '📨 แจ้งเตือนสำเร็จ' });
+    });
+});
+
+app.get('/get-notifications', (req, res) => {
+    const sql = "SELECT * FROM notifications ORDER BY created_at DESC";
+    db.all(sql, (err, results) => {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json(results);
+    });
 });
