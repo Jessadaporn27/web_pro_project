@@ -131,7 +131,7 @@ app.get('/alert', function (req, res) {
     });
 });
 
-app.get('/edit', function (req, res) {
+app.get('/editcustomers', function (req, res) {
     const sql = 'SELECT * FROM customers;';
 
     db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
@@ -139,7 +139,7 @@ app.get('/edit', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('edit', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('editcustomers', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -162,6 +162,11 @@ app.get('/viewappointments', function (req, res) {
         res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
+
+
+
+
+
 
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
