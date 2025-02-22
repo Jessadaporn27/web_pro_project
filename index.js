@@ -138,3 +138,15 @@ app.get('/get_edit', function (req, res) {
 app.get('/get_delete', function (req, res) {
     //coding
 });
+
+app.get('/viewappointments', function (req, res) {
+    const sql = 'SELECT * FROM appointments;';
+
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
