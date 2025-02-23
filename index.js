@@ -31,6 +31,10 @@ app.get('/register', function (req, res) {
     res.render('register');
 });
 
+app.get('/login', function (req, res) {
+    res.render('login');
+});
+
 app.get('/login_get', function (req, res) {
     let formdata = {
         loginType: req.query.loginType,
