@@ -4,6 +4,7 @@ const path = require('path');
 const app = express();
 const port = 3000;
 const sqlite3 = require('sqlite3').verbose();
+const session = require('express-session');
 
 // Connect to SQLite database
 let db = new sqlite3.Database('dental_clinic.db', (err) => {
@@ -18,6 +19,12 @@ app.use(express.static('public'));
 // Set EJS as templating engine
 app.set('view engine', 'ejs');
 app.use(express.json());
+app.use(session({ // npm install express-session สำหรับการใช้ 
+    secret: 'webpro',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
 
 app.listen(port, () => {
     console.log(`listening to port ${port}`);
@@ -36,22 +43,17 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/login_get', function (req, res) {
-    let formdata = {
-        loginType: req.query.loginType,
-        username: req.query.username,
-        email: req.query.email,
-        password: req.query.password
-    };
-
+    let { loginType, username, email, password } = req.query;
+    
     let sql = "";
     let params = [];
 
-    if (formdata.loginType === "email") {
+    if (loginType === "email") {
         sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-        params = [formdata.email, formdata.password];
+        params = [email, password];
     } else {
         sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-        params = [formdata.username, formdata.password];
+        params = [username, password];
     }
 
     db.get(sql, params, (err, user) => {
@@ -64,25 +66,25 @@ app.get('/login_get', function (req, res) {
             return res.json({ status: "error", message: "ไม่พบบัญชีผู้ใช้" });
         }
 
-        if (user.password !== formdata.password) {
+        if (user.password !== password) {
             return res.json({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" });
         }
 
+        // **บันทึก session**
+        req.session.user_id = user.id;
+        req.session.role = user.role;
 
-        const sql2 = 'SELECT * FROM users WHERE username = ' + "'" + params[1] + "'" + ';';
-        log(sql2);
-
-        db.all(sql2, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว 
-            if (err) {
-                console.error(err);
-                return res.status(500).send("Database error");
-            }
-            res.render('main', { data: results }); // ส่งข้อมูลไปที่ view
-        });
-        //res.render('main', { data: user });
-        //res.json({ status: "success", message: `ล็อกอินสำเร็จด้วย ${formdata.loginType}` });
+        res.render('home');
     });
 });
+
+app.get('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) return res.status(500).send('Logout error');
+        res.json({ success: true, message: "ออกจากระบบสำเร็จ" });
+    });
+});
+
 
 
 app.get('/registercustomers', function (req, res) {
@@ -167,17 +169,12 @@ app.get('/viewappointments', function (req, res) {
     });
 });
 
-
-
-
-
-
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
     const { customer_id, appointment_id, message } = req.body;
     
     const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
-    db.all(sql, [customer_id, appointment_id, message], (err, result) => {
+    db.run(sql, [customer_id, appointment_id, message], function(err) {
         if (err) {
             return res.status(500).json({ success: false, error: err.message });
         }
@@ -192,5 +189,20 @@ app.get('/get-notifications', (req, res) => {
             return res.status(500).json({ success: false, error: err.message });
         }
         res.json(results);
+    });
+});
+
+app.get('/bill', (req, res) => {
+    const customer_id = req.query.customer_id;
+    
+    if (!customer_id) {
+        return res.status(400).send("ต้องระบุ customer_id");
+    }
+
+    db.all(`SELECT * FROM treatment_rec WHERE customer_id = ? ORDER BY date DESC`, [customer_id], (err, rows) => {
+        if (err) {
+            return res.status(500).send("Error retrieving bills");
+        }
+        res.render('bill', { bills: rows, customer_id });
     });
 });
