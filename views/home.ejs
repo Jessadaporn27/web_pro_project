@@ -9,6 +9,15 @@
                 <% if (session.user_id) { %>
                     <p>👋 ยินดีต้อนรับ, <strong><%= session.username %></strong>!</p>
                     <a class="d-flex btn btn-danger px-2 py-1 align-self-center" href="/logout" role="button">Logout</a>
+                    <% if (session.hasNotifications) { %>
+                        <script>
+                            alert("📩 คุณมีข้อความแจ้งเตือนใหม่!");
+                        </script>
+                    <% } %>
+                    <% if (session.user_id && session.customer_id) { %>
+                        <a class="d-flex btn btn-info px-2 py-1 align-self-center" href="/inbox" role="button">📩 กล่องข้อความ</a>
+                    <% } %>
+                    
                 <% } else { %>
                     <a class="d-flex btn btn-primary px-2 py-1 align-self-center" href="/login" role="button">Login</a>
                 <% } %>

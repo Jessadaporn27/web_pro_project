@@ -45,11 +45,26 @@ app.get('/login', function (req, res) {
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
     
-    let sql = loginType === "email" 
-        ? "SELECT * FROM users WHERE email = ? AND password = ?"
-        : "SELECT * FROM users WHERE username = ? AND password = ?";
+    let sql = "";
+    let params = [];
 
-    let params = loginType === "email" ? [email, password] : [username, password];
+    if (loginType === "email") {
+        sql = `
+            SELECT users.user_id, users.username, users.role, customers.customer_id 
+            FROM users 
+            LEFT JOIN customers ON users.user_id = customers.user_id 
+            WHERE users.email = ? AND users.password = ?
+        `;
+        params = [email, password];
+    } else {
+        sql = `
+            SELECT users.user_id, users.username, users.role, customers.customer_id 
+            FROM users 
+            LEFT JOIN customers ON users.user_id = customers.user_id 
+            WHERE users.username = ? AND users.password = ?
+        `;
+        params = [username, password];
+    }
 
     db.get(sql, params, (err, user) => {
         if (err) {
@@ -63,13 +78,34 @@ app.get('/login_get', function (req, res) {
 
         // **บันทึกข้อมูล user ใน session**
         req.session.user_id = user.user_id;
-        req.session.username = user.username; // หรือ user.email ก็ได้
+        req.session.username = user.username;
         req.session.role = user.role;
 
-        res.redirect('/');
-        console.log(req.session.user_id);
+        if (["admin", "dentist", "employee"].includes(user.role)) {
+            req.session.customer_id = null; // Admin ไม่มี customer_id
+            return res.redirect('/admin'); // เปลี่ยนไปหน้า admin
+        } else {
+            req.session.customer_id = user.customer_id; // เก็บ customer_id ถ้ามี
+        }
+
+        // ✅ ตรวจสอบว่ามีการแจ้งเตือนใหม่หรือไม่ (เฉพาะลูกค้า)
+        if (user.customer_id) {
+            const notifSql = "SELECT COUNT(*) AS count FROM notifications WHERE customer_id = ? AND seen = 0";
+            db.get(notifSql, [user.customer_id], (err, row) => {
+                if (err) {
+                    console.error("Error checking notifications:", err);
+                    return res.redirect('/');
+                }
+                
+                req.session.hasNotifications = row.count > 0;  // ✅ ตั้งค่าตัวแปร session
+                res.redirect('/');
+            });
+        } else {
+            res.redirect('/'); // Admin ไม่ต้องเช็คแจ้งเตือน
+        }
     });
 });
+
 
 
 
@@ -177,15 +213,24 @@ app.post('/send-notification', (req, res) => {
     });
 });
 
-app.get('/get-notifications', (req, res) => {
-    const sql = "SELECT * FROM notifications ORDER BY created_at DESC";
-    db.all(sql, (err, results) => {
+/* app.get('/get-notifications', (req, res) => {
+    if (!req.session.user_id) {
+        return res.status(403).json({ success: false, message: "กรุณาเข้าสู่ระบบ" });
+    }
+
+    const sql = "SELECT * FROM notifications WHERE customer_id = ? ORDER BY created_at DESC";
+    db.all(sql, [req.session.user_id], (err, results) => {
         if (err) {
             return res.status(500).json({ success: false, error: err.message });
         }
+
+        // 🔹 อัปเดตสถานะว่าเห็นแล้ว
+        const updateSql = "UPDATE notifications SET seen = 1 WHERE customer_id = ?";
+        db.run(updateSql, [req.session.user_id]);
+
         res.json(results);
     });
-});
+}); */
 
 app.get('/bill', (req, res) => {
     const customer_id = req.query.customer_id;
@@ -199,5 +244,41 @@ app.get('/bill', (req, res) => {
             return res.status(500).send("Error retrieving bills");
         }
         res.render('bill', { bills: rows, customer_id });
+    });
+});
+
+app.get('/inbox', (req, res) => {
+    if (!req.session.user_id || !req.session.customer_id) {
+        return res.status(403).send("กรุณาเข้าสู่ระบบก่อน");
+    }
+
+    const sql = "SELECT * FROM notifications WHERE customer_id = ? ORDER BY created_at DESC";
+    
+    db.all(sql, [req.session.customer_id], (err, messages) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).send("เกิดข้อผิดพลาดในระบบ");
+        }
+
+        res.render('inbox', { session: req.session, messages });
+    });
+});
+
+app.post('/mark-as-read', (req, res) => {
+    const { id } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ success: false, message: "ไม่พบ ID ของข้อความ" });
+    }
+
+    const sql = "UPDATE notifications SET seen = 1 WHERE id = ?";
+    
+    db.run(sql, [id], function(err) {
+        if (err) {
+            console.error("Error updating notification:", err);
+            return res.status(500).json({ success: false, message: "ไม่สามารถอัปเดตฐานข้อมูล" });
+        }
+        
+        res.json({ success: true, message: "อัปเดตสำเร็จ" });
     });
 });
