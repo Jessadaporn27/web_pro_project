@@ -1,6 +1,5 @@
 <%- include("head", {Title: "Login"}) %>
 
-
 <body>
     <h1>Login Form</h1>
     <form action="/login_get" method="get">
@@ -19,8 +18,10 @@
         <button type="submit" class="btn btn-primary">Sign-in</button>
         <a href="/register" class="btn btn-primary">Register</a>
     </form>
+
     <script>
         function SWemail() {
+            let passwordValue = document.getElementById("password").value; // ดึงค่าที่กรอกไว้
             document.getElementById("loginlb").innerHTML = `
                 <div class="form-group">
                     <label for="email">Email: </label>
@@ -28,28 +29,29 @@
                 </div>
                 <div class="form-group">
                     <label for="password">Password: </label>
-                    <input type="password" class="form-control" id="password" name="password">
+                    <input type="password" class="form-control" id="password" name="password" value="${passwordValue}">
                 </div>
-                `;
-            document.getElementById("Switch").innerHTML = 'Login with Email';
+            `;
+            document.getElementById("Switch").innerHTML = 'Login with Username';
             document.getElementById("loginType").value = "email";
             document.getElementById("Switch").onclick = SWuser;
         }
+
         function SWuser() {
+            let passwordValue = document.getElementById("password").value;
             document.getElementById('loginlb').innerHTML = `
-                <div class="form-grop">
+                <div class="form-group">
                     <label for="username">Username: </label>
                     <input type="text" class="form-control" id="username" name="username">
                 </div>
                 <div class="form-group">
                     <label for="password">Password: </label>
-                    <input type="password" class="form-control" id="password" name="password">
+                    <input type="password" class="form-control" id="password" name="password" value="${passwordValue}">
                 </div>
             `;
-            document.getElementById("Switch").innerHTML = 'Login with User';
+            document.getElementById("Switch").innerHTML = 'Login with Email';
             document.getElementById("loginType").value = "username";
             document.getElementById("Switch").onclick = SWemail;
-
         }
     </script>
 </body>
