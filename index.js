@@ -31,7 +31,7 @@ app.listen(port, () => {
 });
 
 app.get('/', function (req, res) {
-    res.render('home');
+    res.render('home', { session: req.session || {} });
 });
 
 app.get('/register', function (req, res) {
@@ -45,16 +45,11 @@ app.get('/login', function (req, res) {
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
     
-    let sql = "";
-    let params = [];
+    let sql = loginType === "email" 
+        ? "SELECT * FROM users WHERE email = ? AND password = ?"
+        : "SELECT * FROM users WHERE username = ? AND password = ?";
 
-    if (loginType === "email") {
-        sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-        params = [email, password];
-    } else {
-        sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-        params = [username, password];
-    }
+    let params = loginType === "email" ? [email, password] : [username, password];
 
     db.get(sql, params, (err, user) => {
         if (err) {
@@ -66,22 +61,22 @@ app.get('/login_get', function (req, res) {
             return res.json({ status: "error", message: "ไม่พบบัญชีผู้ใช้" });
         }
 
-        if (user.password !== password) {
-            return res.json({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" });
-        }
-
-        // **บันทึก session**
-        req.session.user_id = user.id;
+        // **บันทึกข้อมูล user ใน session**
+        req.session.user_id = user.user_id;
+        req.session.username = user.username; // หรือ user.email ก็ได้
         req.session.role = user.role;
 
-        res.render('home');
+        res.redirect('/');
+        console.log(req.session.user_id);
     });
 });
+
+
 
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) return res.status(500).send('Logout error');
-        res.json({ success: true, message: "ออกจากระบบสำเร็จ" });
+        res.redirect('/');
     });
 });
 
