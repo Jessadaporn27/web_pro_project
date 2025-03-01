@@ -45,6 +45,7 @@ app.get('/login', function (req, res) {
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
     
+    console.log(req.query);
     let sql = "";
     let params = [];
 
@@ -65,13 +66,14 @@ app.get('/login_get', function (req, res) {
         `;
         params = [username, password];
     }
-
+    console.log(`"SQL:"\t${sql}`);
+    console.log(`"Params:"\t${params}`);
     db.get(sql, params, (err, user) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ status: "error", message: "Server error" });
         }
-
+        console.log(`"User:"\n${user}`);
         if (!user) {
             return res.json({ status: "error", message: "ไม่พบบัญชีผู้ใช้" });
         }
