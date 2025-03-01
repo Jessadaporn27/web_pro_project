@@ -1,0 +1,19 @@
+<%- include("headtable") %>
+
+    <body>
+        <div class="container">
+            <h1>Edit Customer</h1>
+            <div class="table-container">
+                <% data.forEach((item)=> { %>
+                    <p>First Name: </p><input type="text" class="ed" value=<%=item.first_name %>>
+                    <p>Last Name: </p><input type="text" class="ed" value=<%=item.last_name %>>
+                    <p>Phone: </p><input type="text" class="ed" value=<%=item.phone %>>
+                    <p>Email: </p><input type="text" class="ed" value=<%=item.email %>>
+                    <p>Address: </p><input type="text" class="ed" value=<%=item.address %>>
+                    <p>Date of Birp: </p><input type="date" class="ed" value=<%=item.dob %>>
+                    <p>Gender: </p><input type="text" class="ed" value=<%=item.gender %>> <br>
+                    <a href="/save?id=<%=item.customer_id%>"><button class="btn btn-primary">Save</button></a>
+                    <% }); %>
+            </div>
+        </div>
+    </body>

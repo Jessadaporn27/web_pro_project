@@ -182,10 +182,30 @@ app.get('/editcustomers', function (req, res) {
 
 app.get('/get_edit', function (req, res) {
     //coding
+    const sql = `SELECT * FROM customers WHERE customer_id = ${req.query.id}`;
+    // delete a row based on id
+    console.log(sql);
+    db.all(sql, (err, rows) => {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log(`success`);
+        res.render('edit', { data: rows });
+    });
 });
 
 app.get('/get_delete', function (req, res) {
     //coding
+    const sql = `SELECT * FROM customers WHERE customer_id = ${req.query.id}`;
+    // delete a row based on id
+    console.log(sql);
+    db.all(sql, (err, rows) => {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log(`success`);
+        res.render('detail', { data: rows });
+    });
 });
 
 app.get('/viewappointments', function (req, res) {
