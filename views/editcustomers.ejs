@@ -43,8 +43,12 @@
                                     <%= item.gender %>
                                 </td>
                                 <td class="op">
-                                    <a href="/get_delete?id=<%=item.customer_id%>"><button class="btn btn-primary" style="background-color: red; border-color: red;">delete</button></a>
-                                    <a href="/get_edit?id=<%=item.customer_id%>"><button class="btn btn-primary">edit</button></a>
+                                    <a href="/get_delete?id=<%=item.customer_id%>">
+                                        <button class="btn btn-danger">delete</button>
+                                    </a>
+                                    <a href="/get_edit?id=<%=item.customer_id%>">
+                                        <button class="btn btn-primary">edit</button>
+                                    </a>
                                 </td>
                             </tr>
                             <% }); %>

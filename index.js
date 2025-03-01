@@ -44,7 +44,7 @@ app.get('/login', function (req, res) {
 
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
-    
+
     console.log(req.query);
     let sql = "";
     let params = [];
@@ -98,7 +98,7 @@ app.get('/login_get', function (req, res) {
                     console.error("Error checking notifications:", err);
                     return res.redirect('/');
                 }
-                
+
                 req.session.hasNotifications = row.count > 0;  // ✅ ตั้งค่าตัวแปร session
                 res.redirect('/');
             });
@@ -183,9 +183,8 @@ app.get('/editcustomers', function (req, res) {
 });
 
 app.get('/get_edit', function (req, res) {
-    //coding
     const sql = `SELECT * FROM customers WHERE customer_id = ${req.query.id}`;
-    // delete a row based on id
+    // edit a row based on id
     console.log(sql);
     db.all(sql, (err, rows) => {
         if (err) {
@@ -196,17 +195,38 @@ app.get('/get_edit', function (req, res) {
     });
 });
 
-app.get('/get_delete', function (req, res) {
-    //coding
-    const sql = `SELECT * FROM customers WHERE customer_id = ${req.query.id}`;
-    // delete a row based on id
+
+app.get('/save', function (req, res) {
+    let formdata2 = {
+        fname: req.query.fname,
+        lname: req.query.lname,
+        num: req.query.num,
+        email: req.query.email,
+        add: req.query.add,
+        date: req.query.date,
+        gen: req.query.gen,
+    };
+    const sql = `UPDATE customers SET first_name = '${formdata2.fname}', last_name = '${formdata2.lname}', phone = '${formdata2.num}', address = '${formdata2.add}', dob = '${formdata2.date}', gender = '${formdata2.gen}' WHERE customer_id = ${req.query.id};`;
+    // edit a row based on id
     console.log(sql);
-    db.all(sql, (err, rows) => {
+    db.run(sql, function (err) {
         if (err) {
             return console.error(err.message);
         }
-        console.log(`success`);
-        res.render('detail', { data: rows });
+        console.log(`Row(s) save.`);
+    });
+});
+
+
+app.get('/get_delete', function (req, res) {
+    const sql = `DELETE FROM customers WHERE customer_id = ${req.query.id}`;
+    // delete a row based on id
+    console.log(sql);
+    db.run(sql, function (err) {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log(`Row(s) deleted.`);
     });
 });
 
@@ -225,9 +245,9 @@ app.get('/viewappointments', function (req, res) {
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
     const { customer_id, appointment_id, message } = req.body;
-    
+
     const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
-    db.run(sql, [customer_id, appointment_id, message], function(err) {
+    db.run(sql, [customer_id, appointment_id, message], function (err) {
         if (err) {
             return res.status(500).json({ success: false, error: err.message });
         }
@@ -256,7 +276,7 @@ app.post('/send-notification', (req, res) => {
 
 app.get('/bill', (req, res) => {
     const customer_id = req.query.customer_id;
-    
+
     if (!customer_id) {
         return res.status(400).send("ต้องระบุ customer_id");
     }
@@ -275,7 +295,7 @@ app.get('/inbox', (req, res) => {
     }
 
     const sql = "SELECT * FROM notifications WHERE customer_id = ? ORDER BY created_at DESC";
-    
+
     db.all(sql, [req.session.customer_id], (err, messages) => {
         if (err) {
             console.error("Database error:", err);
@@ -294,13 +314,13 @@ app.post('/mark-as-read', (req, res) => {
     }
 
     const sql = "UPDATE notifications SET seen = 1 WHERE id = ?";
-    
-    db.run(sql, [id], function(err) {
+
+    db.run(sql, [id], function (err) {
         if (err) {
             console.error("Error updating notification:", err);
             return res.status(500).json({ success: false, message: "ไม่สามารถอัปเดตฐานข้อมูล" });
         }
-        
+
         res.json({ success: true, message: "อัปเดตสำเร็จ" });
     });
 });
