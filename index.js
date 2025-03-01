@@ -145,17 +145,17 @@ app.get('/getcustomers', function (req, res) {
     });
 })
 
-app.get('/show', function (req, res) {
-    const sql = 'SELECT * FROM customers;';
+// app.get('/show', function (req, res) {
+//     const sql = 'SELECT * FROM customers;';
 
-    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
-        }
-        res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
-    });
-});
+//     db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+//         if (err) {
+//             console.error(err);
+//             return res.status(500).send("Database error");
+//         }
+//         res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
+//     });
+// });
 
 app.get('/alert', function (req, res) {
     const sql = 'select * from customers cross join appointments where appointments.customer_id = customers.customer_id;';
@@ -280,5 +280,31 @@ app.post('/mark-as-read', (req, res) => {
         }
         
         res.json({ success: true, message: "อัปเดตสำเร็จ" });
+    });
+});
+
+app.get('/treatment_records', (req,res) => {
+    res.render('treatment_rec');
+})
+
+app.get('/savetreatment', function (req, res) {
+    let formdata = {
+        customer_id: req.body.customer_id,
+        dentist_id: req.body.dentist_id,
+        diagnosis: req.body.diagnosis,
+        FDI: req.body.FDI,
+        treatment_details: req.body.treatment_details,
+        treatment_date: req.body.treatment_date,
+        next_appointment_date: req.body.next_appointment_date
+    };
+    let sql = `INSERT INTO treatment_rec (customer_id, dentist_id, diagnosis, FDI, treatment_details, treatment_date, next_appointment_date) 
+               VALUES (${formdata.customer_id}, ${formdata.dentist_id}, "${formdata.diagnosis}", ${formdata.FDI}, "${formdata.treatment_details}", "${formdata.treatment_date}", "${formdata.next_appointment_date}")`;
+    
+    console.log(sql);
+    db.run(sql, (err) => {
+        if (err) {
+            return console.error('Error inserting data:', err.message);
+        }
+        console.log('Data inserted successful');
     });
 });
