@@ -7,6 +7,9 @@
             <% data.forEach((item) => { %>
                 <form action="/save" method="get">
                     <input type="hidden" name="id" value="<%= item.customer_id %>">
+                    <p>ID: <%= item.customer_id %></p>
+                    <p>Registration Date: <%= item.registration_date %></p>
+                    <p>User ID: </p><input name="uid" type="text" class="ed" value="<%= item.user_id %>">
                     <p>First Name: </p><input name="fname" type="text" class="ed" value="<%= item.first_name %>">
                     <p>Last Name: </p><input name="lname" type="text" class="ed" value="<%= item.last_name %>">
                     <p>Phone: </p><input name="num" type="text" class="ed" value="<%= item.phone %>">

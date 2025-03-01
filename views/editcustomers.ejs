@@ -3,11 +3,12 @@
     <body>
 
         <div class="container">
-            <h1>Customer List</h1>
+            <h1>Edit Customer</h1>
             <div class="table-container">
                 <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>First Name</th>
                             <th>Last Name</th>
                             <th>Phone</th>
@@ -21,6 +22,9 @@
                     <tbody>
                         <% data.forEach((item)=> { %>
                             <tr>
+                                <td>
+                                    <%= item.customer_id %>
+                                </td>
                                 <td>
                                     <%= item.first_name %>
                                 </td>
@@ -43,11 +47,11 @@
                                     <%= item.gender %>
                                 </td>
                                 <td class="op">
-                                    <a href="/get_delete?id=<%=item.customer_id%>">
-                                        <button class="btn btn-danger">delete</button>
-                                    </a>
                                     <a href="/get_edit?id=<%=item.customer_id%>">
                                         <button class="btn btn-primary">edit</button>
+                                    </a>
+                                    <a href="/get_delete?id=<%=item.customer_id%>">
+                                        <button class="btn btn-danger">delete</button>
                                     </a>
                                 </td>
                             </tr>

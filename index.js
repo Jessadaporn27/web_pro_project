@@ -205,8 +205,9 @@ app.get('/save', function (req, res) {
         add: req.query.add,
         date: req.query.date,
         gen: req.query.gen,
+        uid: req.query.uid,
     };
-    const sql = `UPDATE customers SET first_name = '${formdata2.fname}', last_name = '${formdata2.lname}', phone = '${formdata2.num}', address = '${formdata2.add}', dob = '${formdata2.date}', gender = '${formdata2.gen}' WHERE customer_id = ${req.query.id};`;
+    const sql = `UPDATE customers SET user_id = '${formdata2.uid}', first_name = '${formdata2.fname}', last_name = '${formdata2.lname}', phone = '${formdata2.num}', address = '${formdata2.add}', dob = '${formdata2.date}', gender = '${formdata2.gen}' WHERE customer_id = ${req.query.id};`;
     // edit a row based on id
     console.log(sql);
     db.run(sql, function (err) {
