@@ -1,6 +1,7 @@
-<%- include("head") %>
+<%- include("head", {Title: "Customer Register"}) %>
 
 <body>
+    <%- include("nav", {session: session}) %>
     <div class="container mt-5">
         <h2>Register Customer</h2>
         <form class="form-horizontal" action="/getcustomers" method="get">
