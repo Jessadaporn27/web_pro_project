@@ -85,7 +85,7 @@ app.get('/login_get', function (req, res) {
 
         if (["admin", "dentist", "employee"].includes(user.role)) {
             req.session.customer_id = null; // Admin ไม่มี customer_id
-            return res.redirect('/admin'); // เปลี่ยนไปหน้า admin
+            return res.redirect('/'); // เปลี่ยนไปหน้า admin
         } else {
             req.session.customer_id = user.customer_id; // เก็บ customer_id ถ้ามี
         }
@@ -105,6 +105,7 @@ app.get('/login_get', function (req, res) {
         } else {
             res.redirect('/'); // Admin ไม่ต้องเช็คแจ้งเตือน
         }
+        console.log(session)
     });
 });
 
@@ -121,7 +122,7 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/registercustomers', function (req, res) {
-    res.render('regcustomers');
+    res.render('regcustomers', { session: req.session || {} });
 });
 app.get('/getcustomers', function (req, res) {
     let formdata = {
@@ -307,18 +308,26 @@ app.post('/send-notification', (req, res) => {
     });
 }); */
 
-app.get('/bill', (req, res) => {
-    const customer_id = req.query.customer_id;
-
-    if (!customer_id) {
-        return res.status(400).send("ต้องระบุ customer_id");
+app.get('/bills', (req, res) => {
+    if (!req.session.user_id || !req.session.customer_id) {
+        return res.redirect('/login'); // ถ้ายังไม่ได้ล็อกอิน ให้กลับไปหน้า login
     }
 
-    db.all(`SELECT * FROM treatment_rec WHERE customer_id = ? ORDER BY date DESC`, [customer_id], (err, rows) => {
+    const sql = `
+        SELECT sf.fee_id, sf.treatment_details, sf.amount, tr.treatment_date
+        FROM service_fees sf
+        JOIN treatment_rec tr ON sf.treatment_id = tr.treatment_id
+        WHERE sf.customer_id = ?
+        ORDER BY tr.treatment_date DESC
+    `;
+
+    db.all(sql, [req.session.customer_id], (err, bills) => {
         if (err) {
-            return res.status(500).send("Error retrieving bills");
+            console.error("Database error:", err);
+            return res.status(500).send("❌ ไม่สามารถดึงข้อมูลใบเสร็จ");
         }
-        res.render('bill', { bills: rows, customer_id });
+
+        res.render('bills', { bills });
     });
 });
 
