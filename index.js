@@ -44,7 +44,8 @@ app.get('/login', function (req, res) {
 
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
-    
+
+    console.log(req.query);
     let sql = "";
     let params = [];
 
@@ -65,13 +66,14 @@ app.get('/login_get', function (req, res) {
         `;
         params = [username, password];
     }
-
+    console.log(`"SQL:"\t${sql}`);
+    console.log(`"Params:"\t${params}`);
     db.get(sql, params, (err, user) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ status: "error", message: "Server error" });
         }
-
+        console.log(`"User:"\n${user}`);
         if (!user) {
             return res.json({ status: "error", message: "ไม่พบบัญชีผู้ใช้" });
         }
@@ -96,7 +98,7 @@ app.get('/login_get', function (req, res) {
                     console.error("Error checking notifications:", err);
                     return res.redirect('/');
                 }
-                
+
                 req.session.hasNotifications = row.count > 0;  // ✅ ตั้งค่าตัวแปร session
                 res.redirect('/');
             });
@@ -145,17 +147,17 @@ app.get('/getcustomers', function (req, res) {
     });
 })
 
-app.get('/show', function (req, res) {
-    const sql = 'SELECT * FROM customers;';
+// app.get('/show', function (req, res) {
+//     const sql = 'SELECT * FROM customers;';
 
-    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
-        }
-        res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
-    });
-});
+//     db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+//         if (err) {
+//             console.error(err);
+//             return res.status(500).send("Database error");
+//         }
+//         res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
+//     });
+// });
 
 app.get('/alert', function (req, res) {
     const sql = 'select * from customers cross join appointments where appointments.customer_id = customers.customer_id;';
@@ -181,11 +183,52 @@ app.get('/editcustomers', function (req, res) {
 });
 
 app.get('/get_edit', function (req, res) {
-    //coding
+    const sql = `SELECT * FROM customers WHERE customer_id = ${req.query.id}`;
+    // edit a row based on id
+    console.log(sql);
+    db.all(sql, (err, rows) => {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log(`success`);
+        res.render('edit', { data: rows });
+    });
 });
 
+
+app.get('/save', function (req, res) {
+    let formdata2 = {
+        fname: req.query.fname,
+        lname: req.query.lname,
+        num: req.query.num,
+        email: req.query.email,
+        add: req.query.add,
+        date: req.query.date,
+        gen: req.query.gen,
+        uid: req.query.uid,
+    };
+    const sql = `UPDATE customers SET user_id = '${formdata2.uid}', first_name = '${formdata2.fname}', last_name = '${formdata2.lname}', phone = '${formdata2.num}', address = '${formdata2.add}', dob = '${formdata2.date}', gender = '${formdata2.gen}' WHERE customer_id = ${req.query.id};`;
+    // edit a row based on id
+    console.log(sql);
+    db.run(sql, function (err) {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log(`Row(s) save.`);
+    });
+});
+
+
 app.get('/get_delete', function (req, res) {
-    //coding
+    const sql = `DELETE FROM customers WHERE customer_id = ${req.query.id}`;
+    // delete a row based on id
+    console.log(sql);
+    db.run(sql, function (err) {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log(`Row(s) deleted.`);
+    });
 });
 
 app.get('/viewappointments', function (req, res) {
@@ -203,9 +246,9 @@ app.get('/viewappointments', function (req, res) {
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
     const { customer_id, appointment_id, message } = req.body;
-    
+
     const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
-    db.run(sql, [customer_id, appointment_id, message], function(err) {
+    db.run(sql, [customer_id, appointment_id, message], function (err) {
         if (err) {
             return res.status(500).json({ success: false, error: err.message });
         }
@@ -261,7 +304,7 @@ app.get('/inbox', (req, res) => {
     }
 
     const sql = "SELECT * FROM notifications WHERE customer_id = ? ORDER BY created_at DESC";
-    
+
     db.all(sql, [req.session.customer_id], (err, messages) => {
         if (err) {
             console.error("Database error:", err);
@@ -280,13 +323,39 @@ app.post('/mark-as-read', (req, res) => {
     }
 
     const sql = "UPDATE notifications SET seen = 1 WHERE id = ?";
-    
-    db.run(sql, [id], function(err) {
+
+    db.run(sql, [id], function (err) {
         if (err) {
             console.error("Error updating notification:", err);
             return res.status(500).json({ success: false, message: "ไม่สามารถอัปเดตฐานข้อมูล" });
         }
-        
+
         res.json({ success: true, message: "อัปเดตสำเร็จ" });
+    });
+});
+
+app.get('/treatment_records', (req,res) => {
+    res.render('treatment_rec');
+})
+
+app.get('/savetreatment', function (req, res) {
+    let formdata = {
+        customer_id: req.body.customer_id,
+        dentist_id: req.body.dentist_id,
+        diagnosis: req.body.diagnosis,
+        FDI: req.body.FDI,
+        treatment_details: req.body.treatment_details,
+        treatment_date: req.body.treatment_date,
+        next_appointment_date: req.body.next_appointment_date
+    };
+    let sql = `INSERT INTO treatment_rec (customer_id, dentist_id, diagnosis, FDI, treatment_details, treatment_date, next_appointment_date) 
+               VALUES (${formdata.customer_id}, ${formdata.dentist_id}, "${formdata.diagnosis}", ${formdata.FDI}, "${formdata.treatment_details}", "${formdata.treatment_date}", "${formdata.next_appointment_date}")`;
+    
+    console.log(sql);
+    db.run(sql, (err) => {
+        if (err) {
+            return console.error('Error inserting data:', err.message);
+        }
+        console.log('Data inserted successful');
     });
 });
