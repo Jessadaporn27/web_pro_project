@@ -85,7 +85,7 @@ app.get('/login_get', function (req, res) {
 
         if (["admin", "dentist", "employee"].includes(user.role)) {
             req.session.customer_id = null; // Admin ไม่มี customer_id
-            return res.redirect('/admin'); // เปลี่ยนไปหน้า admin
+            return res.redirect('/'); // เปลี่ยนไปหน้า admin
         } else {
             req.session.customer_id = user.customer_id; // เก็บ customer_id ถ้ามี
         }
@@ -105,6 +105,7 @@ app.get('/login_get', function (req, res) {
         } else {
             res.redirect('/'); // Admin ไม่ต้องเช็คแจ้งเตือน
         }
+        console.log(session)
     });
 });
 
@@ -121,7 +122,7 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/registercustomers', function (req, res) {
-    res.render('regcustomers');
+    res.render('regcustomers', { session: req.session || {} });
 });
 app.get('/getcustomers', function (req, res) {
     let formdata = {
