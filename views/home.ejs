@@ -1,28 +1,63 @@
 <%- include("head", {Title: "Home"}) %>
 <body>
-    <div class="container-xl">
-        <div class="row row-cols-12" style="margin: auto;">
-            <div class="col-md-9 offset-md-1">
-                <a href="/"><img class="rounded img-thumbnail" src="/image/testImage.jpg"></a>
-            </div>
-            <div class="d-flex justify-content-center col-2">
-                <% if (session.user_id) { %>
-                    <p>👋 ยินดีต้อนรับ, <strong><%= session.username %></strong>!</p>
-                    <a class="d-flex btn btn-danger px-2 py-1 align-self-center" href="/logout" role="button">Logout</a>
-                    <% if (session.hasNotifications) { %>
-                        <script>
-                            alert("📩 คุณมีข้อความแจ้งเตือนใหม่!");
-                        </script>
-                    <% } %>
-                    <% if (session.user_id && session.customer_id) { %>
-                        <a class="d-flex btn btn-info px-2 py-1 align-self-center" href="/inbox" role="button">📩 กล่องข้อความ</a>
-                    <% } %>
-                    
-                <% } else { %>
-                    <a class="d-flex btn btn-primary px-2 py-1 align-self-center" href="/login" role="button">Login</a>
-                <% } %>
-            </div>
+    <%- include("nav") %>
+    <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+        <ol class="carousel-indicators">
+          <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+          <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+          <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+        </ol>
+        <div class="carousel-inner" style="height: 500px; width: 80%; margin: 0 auto; overflow: hidden;">
+          <div class="carousel-item active" style="height: 100%;">
+            <img class="d-block w-100" src="/image/testImage.jpg" alt="First slide" style="width: 100%; height: 500px; object-fit: cover; object-position: center; border-radius: 3px;">
+          </div>
+          <div class="carousel-item" style="height: 100%;">
+            <img class="d-block w-100" src="/image/testImage.jpg" alt="Second slide" style="width: 100%; height: 500px; object-fit: cover; object-position: center; border-radius: 3px;">
+          </div>
+          <div class="carousel-item" style="height: 100%;">
+            <img class="d-block w-100" src="/image/testImage.jpg" alt="Third slide" style="width: 100%; height: 500px; object-fit: cover; object-position: center; border-radius: 3px;">
+          </div>
+          <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
         </div>
-    </div>
+      </div>
+
+<!-- Add this CSS to ensure consistent behavior -->
+<style>
+  /* Make sure carousel maintains its height */
+  #carouselExampleIndicators .carousel-inner {
+    height: 500px !important;
+  }
+  
+  /* Ensure all carousel items take full height */
+  #carouselExampleIndicators .carousel-item {
+    height: 100%;
+  }
+  
+  /* Ensure images fit properly within their container */
+  #carouselExampleIndicators .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  
+  /* Ensure controls display correctly */
+  #carouselExampleIndicators .carousel-control-prev,
+  #carouselExampleIndicators .carousel-control-next {
+    color: darkslategray;
+  }
+  
+  /* Make sure indicators appear at bottom */
+  #carouselExampleIndicators .carousel-indicators {
+    bottom: 10px;
+  }
+</style>
     <h2>Hi there if you are watching this it mean I am not finish coding this yet.</h2>
 </body>
