@@ -5,7 +5,7 @@ const app = express();
 const port = 3000;
 const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
-const { open } = require("sqlite");
+
 // Connect to SQLite database
 let db = new sqlite3.Database('dental_clinic.db', (err) => {
     if (err) {
@@ -13,18 +13,12 @@ let db = new sqlite3.Database('dental_clinic.db', (err) => {
     }
     console.log('Connected to the SQlite database.');
 });
-async function openDb() {
-    return open({
-        filename: "dental_clinic.db", // เปลี่ยนเป็น path ฐานข้อมูลของคุณ
-        driver: sqlite3.Database,
-    });
-}
+
 // static resourse & templating engine
 app.use(express.static('public'));
 // Set EJS as templating engine
 app.set('view engine', 'ejs');
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(session({ // npm install express-session สำหรับการใช้ 
     secret: 'webpro',
     resave: false,
@@ -138,21 +132,53 @@ app.get('/getcustomers', function (req, res) {
         email: req.query.email,
         add: req.query.address,
         dob: req.query.dob,
-        gender: req.query.gender
+        gender: req.query.gender,
+        username: req.query.username,
+        password: req.query.password
     };
-    console.log(formdata);
-    let sql = `INSERT INTO customers (first_name, last_name, phone, email, address, dob, gender) 
-        VALUES ('${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
-        '${formdata.add}', '${formdata.dob}', '${formdata.gender}');
-    `;
-    console.log(sql);
-    db.run(sql, (err) => {
+    let usersql = `INSERT INTO users (username, password, role, email)
+    VALUES ('${formdata.username}','${formdata.password}','customer','${formdata.email}');`;
+
+    db.run(usersql, (err) => {
         if (err) {
             return console.error('Error inserting data:', err.message);
         }
         console.log('Data inserted successful');
+
+        let selectid = `SELECT user_id FROM users WHERE email = '${formdata.email}';`;
+
+        db.get(selectid, function (err, row) {
+            if (err) {
+                console.error('Error selecting user_id:', err.message);
+                return res.status(500).send('Error selecting user_id');
+            }
+
+            if (!row) {
+                return res.status(400).send('User ID not found');
+            }
+
+            let userid = row.user_id;
+            console.log('User ID:', userid);
+
+            // SQL สำหรับเพิ่มข้อมูลใน customers
+            let customersql = `INSERT INTO customers (user_id,first_name, last_name, phone, email, address, dob, gender) 
+                            VALUES (${userid},'${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
+                            '${formdata.add}', '${formdata.dob}', '${formdata.gender}');`;
+
+            db.run(customersql,function (err) {
+                if (err) {
+                    console.error('Error inserting customer:', err.message);
+                    return res.status(500).send('Error inserting customer');
+                }
+
+                console.log('Customer inserted successfully');
+                res.send('Customer registration successful');
+            });
+        });
     });
-})
+});
+
+
 
 // app.get('/show', function (req, res) {
 //     const sql = 'SELECT * FROM customers;';
@@ -249,6 +275,36 @@ app.get('/viewappointments', function (req, res) {
         res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
+
+app.get('/appointments', function (req, res) {
+    const sql = 'SELECT appointment_date FROM appointments;';
+
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('regappointments', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
+
+app.get('/bookappointment', function (req, res) {
+    let appointmentDate = req.query.date;
+    res.render('bookappointments', { date: appointmentDate });
+});
+
+app.post('/confirmbooking', function (req, res) {
+    let appointmentDate = req.body.appointment_date;
+    let sql = `INSERT INTO appointments (appointment_date) VALUES (?);`;
+
+    db.run(sql, [appointmentDate], function (err) {
+        if (err) {
+            return res.send("Error booking appointment.");
+        }
+        res.redirect('/appointments'); // กลับไปหน้า appointments
+    });
+});
+
 
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
@@ -347,13 +403,13 @@ app.get('/treatment_records', (req,res) => {
 
 app.get('/savetreatment', function (req, res) {
     let formdata = {
-        customer_id: req.body.customer_id,
-        dentist_id: req.body.dentist_id,
-        diagnosis: req.body.diagnosis,
-        FDI: req.body.FDI,
-        treatment_details: req.body.treatment_details,
-        treatment_date: req.body.treatment_date,
-        next_appointment_date: req.body.next_appointment_date
+        customer_id: req.query.customer_id,
+        dentist_id: req.query.dentist_id,
+        diagnosis: req.query.diagnosis,
+        FDI: req.query.FDI,
+        treatment_details: req.query.treatment_details,
+        treatment_date: req.query.treatment_date,
+        next_appointment_date: req.query.next_appointment_date
     };
     let sql = `INSERT INTO treatment_rec (customer_id, dentist_id, diagnosis, FDI, treatment_details, treatment_date, next_appointment_date) 
                VALUES (${formdata.customer_id}, ${formdata.dentist_id}, "${formdata.diagnosis}", ${formdata.FDI}, "${formdata.treatment_details}", "${formdata.treatment_date}", "${formdata.next_appointment_date}")`;
@@ -365,74 +421,4 @@ app.get('/savetreatment', function (req, res) {
         }
         console.log('Data inserted successful');
     });
-});
-
-app.get("/create-bill", async (req, res) => {
-    const db = await openDb();
-
-    try {
-        // ดึงลูกค้าที่มี treatment แต่ยังไม่มีบิลใน service_fees
-        const customers = await db.all(`
-            SELECT DISTINCT c.*
-            FROM customers c
-            JOIN treatment_rec t ON c.customer_id = t.customer_id
-            LEFT JOIN service_fees s ON t.treatment_id = s.treatment_id
-            WHERE s.treatment_id IS NULL;
-        `);
-
-        // ดึงเฉพาะรายการ treatment ที่ยังไม่มีบิลใน service_fees
-        const treatments = await db.all(`
-            SELECT t.*
-            FROM treatment_rec t
-            LEFT JOIN service_fees s ON t.treatment_id = s.treatment_id
-            WHERE s.treatment_id IS NULL;
-        `);
-
-        res.render("create-bill", { customers, treatments }); // ✅ ส่ง treatments ไปด้วย
-    } catch (error) {
-        console.error("❌ Error fetching data:", error);
-        res.status(500).send("Internal Server Error");
-    }
-});
-
-
-app.post("/create-bill", async (req, res) => {
-    const { customer_id, treatment_id, treatment_details, amount } = req.body;
-
-    if (!customer_id || !treatment_id || !treatment_details || !amount) {
-        return res.status(400).send("❌ กรุณากรอกข้อมูลให้ครบถ้วน");
-    }
-
-    const db = await openDb();
-
-    try {
-        await db.run(`
-            INSERT INTO service_fees (customer_id, treatment_id, treatment_details, amount)
-            VALUES (?, ?, ?, ?)
-        `, [customer_id, treatment_id, treatment_details, amount]);
-
-        console.log("✅ บันทึกค่ารักษาเรียบร้อย");
-        res.redirect("/treatment-list");
-    } catch (error) {
-        console.error("❌ Error inserting bill:", error);
-        res.status(500).send("เกิดข้อผิดพลาด");
-    }
-});
-
-
-app.get("/treatment-list", async (req, res) => {
-    const db = await openDb();
-    try {
-        const treatments = await db.all(`
-            SELECT tr.*, c.first_name, c.last_name 
-            FROM treatment_rec tr
-            JOIN customers c ON tr.customer_id = c.customer_id
-            WHERE tr.treatment_id NOT IN (SELECT treatment_id FROM service_fees)
-        `);
-
-        res.render("treatment-list", { treatments });
-    } catch (error) {
-        console.error("❌ Error fetching treatment data:", error);
-        res.status(500).send("เกิดข้อผิดพลาด");
-    }
 });
