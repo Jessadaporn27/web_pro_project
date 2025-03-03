@@ -91,7 +91,7 @@ app.get('/login_get', function (req, res) {
 
         if (["admin", "dentist", "employee"].includes(user.role)) {
             req.session.customer_id = null; // Admin ไม่มี customer_id
-            return res.redirect('/admin'); // เปลี่ยนไปหน้า admin
+            return res.redirect('/'); // เปลี่ยนไปหน้า admin
         } else {
             req.session.customer_id = user.customer_id; // เก็บ customer_id ถ้ามี
         }
@@ -111,6 +111,7 @@ app.get('/login_get', function (req, res) {
         } else {
             res.redirect('/'); // Admin ไม่ต้องเช็คแจ้งเตือน
         }
+        console.log(session)
     });
 });
 
@@ -127,7 +128,7 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/registercustomers', function (req, res) {
-    res.render('regcustomers');
+    res.render('regcustomers', { session: req.session || {} });
 });
 app.get('/getcustomers', function (req, res) {
     let formdata = {
@@ -137,21 +138,53 @@ app.get('/getcustomers', function (req, res) {
         email: req.query.email,
         add: req.query.address,
         dob: req.query.dob,
-        gender: req.query.gender
+        gender: req.query.gender,
+        username: req.query.username,
+        password: req.query.password
     };
-    console.log(formdata);
-    let sql = `INSERT INTO customers (first_name, last_name, phone, email, address, dob, gender) 
-        VALUES ('${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
-        '${formdata.add}', '${formdata.dob}', '${formdata.gender}');
-    `;
-    console.log(sql);
-    db.run(sql, (err) => {
+    let usersql = `INSERT INTO users (username, password, role, email)
+    VALUES ('${formdata.username}','${formdata.password}','customer','${formdata.email}');`;
+
+    db.run(usersql, (err) => {
         if (err) {
             return console.error('Error inserting data:', err.message);
         }
         console.log('Data inserted successful');
+
+        let selectid = `SELECT user_id FROM users WHERE email = '${formdata.email}';`;
+
+        db.get(selectid, function (err, row) {
+            if (err) {
+                console.error('Error selecting user_id:', err.message);
+                return res.status(500).send('Error selecting user_id');
+            }
+
+            if (!row) {
+                return res.status(400).send('User ID not found');
+            }
+
+            let userid = row.user_id;
+            console.log('User ID:', userid);
+
+            // SQL สำหรับเพิ่มข้อมูลใน customers
+            let customersql = `INSERT INTO customers (user_id,first_name, last_name, phone, email, address, dob, gender) 
+                            VALUES (${userid},'${formdata.first_name}', '${formdata.last_name}', '${formdata.phone}', '${formdata.email}',
+                            '${formdata.add}', '${formdata.dob}', '${formdata.gender}');`;
+
+            db.run(customersql,function (err) {
+                if (err) {
+                    console.error('Error inserting customer:', err.message);
+                    return res.status(500).send('Error inserting customer');
+                }
+
+                console.log('Customer inserted successfully');
+                res.send('Customer registration successful');
+            });
+        });
     });
-})
+});
+
+
 
 // app.get('/show', function (req, res) {
 //     const sql = 'SELECT * FROM customers;';
@@ -248,6 +281,36 @@ app.get('/viewappointments', function (req, res) {
         res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
+
+app.get('/appointments', function (req, res) {
+    const sql = 'SELECT appointment_date FROM appointments;';
+
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('regappointments', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
+
+app.get('/bookappointment', function (req, res) {
+    let appointmentDate = req.query.date;
+    res.render('bookappointments', { date: appointmentDate });
+});
+
+app.post('/confirmbooking', function (req, res) {
+    let appointmentDate = req.body.appointment_date;
+    let sql = `INSERT INTO appointments (appointment_date) VALUES (?);`;
+
+    db.run(sql, [appointmentDate], function (err) {
+        if (err) {
+            return res.send("Error booking appointment.");
+        }
+        res.redirect('/appointments'); // กลับไปหน้า appointments
+    });
+});
+
 
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
@@ -346,13 +409,13 @@ app.get('/treatment_records', (req,res) => {
 
 app.get('/savetreatment', function (req, res) {
     let formdata = {
-        customer_id: req.body.customer_id,
-        dentist_id: req.body.dentist_id,
-        diagnosis: req.body.diagnosis,
-        FDI: req.body.FDI,
-        treatment_details: req.body.treatment_details,
-        treatment_date: req.body.treatment_date,
-        next_appointment_date: req.body.next_appointment_date
+        customer_id: req.query.customer_id,
+        dentist_id: req.query.dentist_id,
+        diagnosis: req.query.diagnosis,
+        FDI: req.query.FDI,
+        treatment_details: req.query.treatment_details,
+        treatment_date: req.query.treatment_date,
+        next_appointment_date: req.query.next_appointment_date
     };
     let sql = `INSERT INTO treatment_rec (customer_id, dentist_id, diagnosis, FDI, treatment_details, treatment_date, next_appointment_date) 
                VALUES (${formdata.customer_id}, ${formdata.dentist_id}, "${formdata.diagnosis}", ${formdata.FDI}, "${formdata.treatment_details}", "${formdata.treatment_date}", "${formdata.next_appointment_date}")`;
