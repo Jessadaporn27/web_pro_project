@@ -428,3 +428,71 @@ app.get('/savetreatment', function (req, res) {
         console.log('Data inserted successful');
     });
 });
+app.get("/treatment-list", async (req, res) => {
+    const db = await openDb();
+    try {
+        const treatments = await db.all(`
+            SELECT tr.*, c.first_name, c.last_name 
+            FROM treatment_rec tr
+            JOIN customers c ON tr.customer_id = c.customer_id
+            WHERE tr.treatment_id NOT IN (SELECT treatment_id FROM service_fees)
+        `);
+
+        res.render("treatment-list", { treatments });
+    } catch (error) {
+        console.error("❌ Error fetching treatment data:", error);
+        res.status(500).send("เกิดข้อผิดพลาด");
+    }
+});
+
+app.get("/create-bill", async (req, res) => {
+    const db = await openDb();
+
+    try {
+        // ดึงลูกค้าที่มี treatment แต่ยังไม่มีบิลใน service_fees
+        const customers = await db.all(`
+            SELECT DISTINCT c.*
+            FROM customers c
+            JOIN treatment_rec t ON c.customer_id = t.customer_id
+            LEFT JOIN service_fees s ON t.treatment_id = s.treatment_id
+            WHERE s.treatment_id IS NULL;
+        `);
+
+        // ดึงเฉพาะรายการ treatment ที่ยังไม่มีบิลใน service_fees
+        const treatments = await db.all(`
+            SELECT t.*
+            FROM treatment_rec t
+            LEFT JOIN service_fees s ON t.treatment_id = s.treatment_id
+            WHERE s.treatment_id IS NULL;
+        `);
+
+        res.render("create-bill", { customers, treatments }); // ✅ ส่ง treatments ไปด้วย
+    } catch (error) {
+        console.error("❌ Error fetching data:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
+app.post("/create-bill", async (req, res) => {
+    const { customer_id, treatment_id, treatment_details, amount } = req.body;
+
+    if (!customer_id || !treatment_id || !treatment_details || !amount) {
+        return res.status(400).send("❌ กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+
+    const db = await openDb();
+
+    try {
+        await db.run(`
+            INSERT INTO service_fees (customer_id, treatment_id, treatment_details, amount)
+            VALUES (?, ?, ?, ?)
+        `, [customer_id, treatment_id, treatment_details, amount]);
+
+        console.log("✅ บันทึกค่ารักษาเรียบร้อย");
+        res.redirect("/treatment-list");
+    } catch (error) {
+        console.error("❌ Error inserting bill:", error);
+        res.status(500).send("เกิดข้อผิดพลาด");
+    }
+});
