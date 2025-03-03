@@ -276,6 +276,36 @@ app.get('/viewappointments', function (req, res) {
     });
 });
 
+app.get('/appointments', function (req, res) {
+    const sql = 'SELECT appointment_date FROM appointments;';
+
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error");
+        }
+        res.render('regappointments', { data: results }); // ส่งข้อมูลไปที่ view
+    });
+});
+
+app.get('/bookappointment', function (req, res) {
+    let appointmentDate = req.query.date;
+    res.render('bookappointments', { date: appointmentDate });
+});
+
+app.post('/confirmbooking', function (req, res) {
+    let appointmentDate = req.body.appointment_date;
+    let sql = `INSERT INTO appointments (appointment_date) VALUES (?);`;
+
+    db.run(sql, [appointmentDate], function (err) {
+        if (err) {
+            return res.send("Error booking appointment.");
+        }
+        res.redirect('/appointments'); // กลับไปหน้า appointments
+    });
+});
+
+
 app.post('/send-notification', (req, res) => {
     console.log("Received Data:", req.body);
     const { customer_id, appointment_id, message } = req.body;
