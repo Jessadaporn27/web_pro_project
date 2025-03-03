@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Confirm Appointment</h2>
+        <p>Are you sure you want to book an appointment on <strong><%= date %></strong>?</p>
+        <form action="/confirmbooking" method="post">
+            <input type="hidden" name="appointment_date" value="<%= date %>">
+            <button type="submit" class="btn btn-success">Confirm</button>
+            <a href="/appointments" class="btn btn-danger">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
