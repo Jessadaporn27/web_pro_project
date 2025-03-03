@@ -1,0 +1,26 @@
+<%- include("headtable") %>
+
+<body>
+    <div class="container">
+        <h1>Edit Customer</h1>
+        <div class="table-container">
+            <% data.forEach((item) => { %>
+                <form action="/save" method="get">
+                    <input type="hidden" name="id" value="<%= item.customer_id %>">
+                    <p>ID: <%= item.customer_id %></p>
+                    <p>Registration Date: <%= item.registration_date %></p>
+                    <p>User ID: </p><input name="uid" type="text" class="ed" value="<%= item.user_id %>">
+                    <p>First Name: </p><input name="fname" type="text" class="ed" value="<%= item.first_name %>">
+                    <p>Last Name: </p><input name="lname" type="text" class="ed" value="<%= item.last_name %>">
+                    <p>Phone: </p><input name="num" type="text" class="ed" value="<%= item.phone %>">
+                    <p>Email: </p><input name="email" type="text" class="ed" value="<%= item.email %>">
+                    <p>Address: </p><input name="add" type="text" class="ed" value="<%= item.address %>">
+                    <p>Date of Birth: </p><input name="date" type="date" class="ed" value="<%= item.dob %>">
+                    <p>Gender: </p><input name="gen" type="text" class="ed" value="<%= item.gender %>"> <br>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="/editcustomers"><button type="button" class="btn btn-primary" style="background-color: white; color: black;">Back</button></a>
+                </form>
+            <% }); %>
+        </div>
+    </div>
+</body>
