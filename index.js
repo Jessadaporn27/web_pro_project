@@ -217,7 +217,7 @@ app.get('/editcustomers', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('editcustomers', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('editcustomers', { session: req.session || {} , data: results }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -292,7 +292,7 @@ app.get('/viewappointments', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('appointments', { session: req.session || {} , data: results }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -333,7 +333,7 @@ app.get('/bookappointmentsAdmin', function (req, res) {
                     return res.status(500).send("Error fetching employee list.");
                 }
 
-                res.render('bookappointmentsAdmin', { customers, dentists, employees});
+                res.render('bookappointmentsAdmin', { session: req.session || {} , customers, dentists, employees});
             });
         });
     });
@@ -362,7 +362,7 @@ app.get('/regappointments', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('regappointments', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('regappointments', { session: req.session || {} , data: results }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -383,7 +383,7 @@ app.get('/bookappointments', function (req, res) {
                 return res.status(500).send("Error fetching dentist list.");
             }
 
-            res.render('bookappointments', { customers, dentists, appointment_date });
+            res.render('bookappointments', { session: req.session || {} , customers, dentists, appointment_date });
         });
     });
 });
@@ -513,7 +513,7 @@ app.get('/treatment_rec', (req, res) => {
                 return res.status(500).send("Database error");
             }
 
-            res.render('treatment_rec', { customers, dentists });
+            res.render('treatment_rec', { session: req.session || {} , customers, dentists });
         });
     });
 });
