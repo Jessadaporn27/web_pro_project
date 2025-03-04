@@ -51,7 +51,6 @@ app.get('/login', function (req, res) {
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
 
-    console.log(req.query);
     let sql = "";
     let params = [];
 
@@ -72,14 +71,11 @@ app.get('/login_get', function (req, res) {
         `;
         params = [username, password];
     }
-    console.log(`"SQL:"\t${sql}`);
-    console.log(`"Params:"\t${params}`);
     db.get(sql, params, (err, user) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ status: "error", message: "Server error" });
         }
-        console.log(`"User:"\n${user}`);
         if (!user) {
             return res.json({ status: "error", message: "ไม่พบบัญชีผู้ใช้" });
         }
@@ -93,11 +89,7 @@ app.get('/login_get', function (req, res) {
             req.session.customer_id = null; // Admin ไม่มี customer_id
             return res.redirect('/'); // เปลี่ยนไปหน้า admin
         } else {
-            req.session.customer_id = user.customer_id; // เก็บ customer_id ถ้ามี
-        }
-
-        // ✅ ตรวจสอบว่ามีการแจ้งเตือนใหม่หรือไม่ (เฉพาะลูกค้า)
-        if (user.customer_id) {
+            req.session.customer_id = user.customer_id;
             const notifSql = "SELECT COUNT(*) AS count FROM notifications WHERE customer_id = ? AND seen = 0";
             db.get(notifSql, [user.customer_id], (err, row) => {
                 if (err) {
@@ -107,11 +99,10 @@ app.get('/login_get', function (req, res) {
 
                 req.session.hasNotifications = row.count > 0;  // ✅ ตั้งค่าตัวแปร session
                 res.redirect('/');
-            });
-        } else {
-            res.redirect('/'); // Admin ไม่ต้องเช็คแจ้งเตือน
+                console.log(notifSql);
+            }); // เก็บ customer_id ถ้ามี
         }
-        console.log(session)
+        
     });
 });
 
@@ -199,15 +190,35 @@ app.get('/getcustomers', function (req, res) {
 // });
 
 app.get('/alert', function (req, res) {
-    const sql = 'select * from customers cross join appointments where appointments.customer_id = customers.customer_id;';
+    const sql = `
+        SELECT 
+            appointments.appointment_id,
+            customers.customer_id, 
+            customers.first_name, 
+            customers.last_name,
+            appointments.appointment_date,
+            appointments.appointment_time,
+            appointments.notes,
+            appointments.status,
+            CASE 
+                WHEN notifications.id IS NOT NULL THEN 1 
+                ELSE 0 
+            END AS notified
+        FROM appointments
+        INNER JOIN customers ON appointments.customer_id = customers.customer_id
+        LEFT JOIN notifications ON appointments.appointment_id = notifications.appointment_id
+    `;
+
     db.all(sql, [], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('alert', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('alert', { data: results, session: req.session || {} });
     });
 });
+
+
 
 app.get('/editcustomers', function (req, res) {
     const sql = 'SELECT * FROM customers;';
@@ -313,15 +324,25 @@ app.post('/confirmbooking', function (req, res) {
 
 
 app.post('/send-notification', (req, res) => {
-    console.log("Received Data:", req.body);
+    console.log("📩 Received Data:", req.body);
+
     const { customer_id, appointment_id, message } = req.body;
 
-    const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
+    if (!customer_id || !appointment_id || !message) {
+        console.error("❌ Missing Data", { customer_id, appointment_id, message });
+        return res.status(400).json({ success: false, error: "ข้อมูลไม่ครบถ้วน" });
+    }
+
+    const sql = `INSERT INTO notifications (customer_id, appointment_id, message) 
+                 VALUES (?, ?, ?)`;  
+
     db.run(sql, [customer_id, appointment_id, message], function (err) {
         if (err) {
+            console.error("❌ Database Error:", err.message);
             return res.status(500).json({ success: false, error: err.message });
         }
-        res.json({ success: true, message: '📨 แจ้งเตือนสำเร็จ' });
+        console.log("✅ Inserted ID:", this.lastID); // Debug log
+        res.json({ success: true, message: '📨 แจ้งเตือนสำเร็จ', inserted_id: this.lastID });
     });
 });
 
@@ -350,7 +371,7 @@ app.get('/bills', (req, res) => {
     }
 
     const sql = `
-        SELECT sf.fee_id, sf.treatment_details, sf.amount, tr.treatment_date
+        SELECT sf.fee_id, sf.treatment_details, sf.amount, tr.treatment_date, sf.payment_status
         FROM service_fees sf
         JOIN treatment_rec tr ON sf.treatment_id = tr.treatment_id
         WHERE sf.customer_id = ?
@@ -363,7 +384,7 @@ app.get('/bills', (req, res) => {
             return res.status(500).send("❌ ไม่สามารถดึงข้อมูลใบเสร็จ");
         }
 
-        res.render('bills', { bills });
+        res.render('bills', { bills ,session: req.session || {} });
     });
 });
 
@@ -386,22 +407,27 @@ app.get('/inbox', (req, res) => {
 
 app.post('/mark-as-read', (req, res) => {
     const { id } = req.body;
-
-    if (!id) {
-        return res.status(400).json({ success: false, message: "ไม่พบ ID ของข้อความ" });
-    }
+    console.log("Marking as read:", id);
 
     const sql = "UPDATE notifications SET seen = 1 WHERE id = ?";
-
     db.run(sql, [id], function (err) {
         if (err) {
-            console.error("Error updating notification:", err);
-            return res.status(500).json({ success: false, message: "ไม่สามารถอัปเดตฐานข้อมูล" });
+            return res.status(500).json({ success: false, error: err.message });
         }
 
-        res.json({ success: true, message: "อัปเดตสำเร็จ" });
+        // ตรวจสอบจำนวนแจ้งเตือนที่ยังไม่ได้อ่าน
+        db.get("SELECT COUNT(*) AS unread FROM notifications WHERE seen = 0", [], (err, row) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: err.message });
+            }
+
+            req.session.hasNotifications = row.unread > 0; // อัปเดต session
+            res.json({ success: true, unread: row.unread });
+        });
     });
 });
+
+
 
 app.get('/treatment_records', (req,res) => {
     res.render('treatment_rec');
@@ -440,11 +466,11 @@ app.get("/treatment-list", async (req, res) => {
 
         res.render("treatment-list", { treatments });
     } catch (error) {
-        console.error("❌ Error fetching treatment data:", error);
+        console.error("Error fetching treatment data:", error);
         res.status(500).send("เกิดข้อผิดพลาด");
     }
 });
-
+/* 
 app.get("/create-bill", async (req, res) => {
     const db = await openDb();
 
@@ -471,7 +497,7 @@ app.get("/create-bill", async (req, res) => {
         console.error("❌ Error fetching data:", error);
         res.status(500).send("Internal Server Error");
     }
-});
+}); */
 
 
 app.post("/create-bill", async (req, res) => {
@@ -496,3 +522,40 @@ app.post("/create-bill", async (req, res) => {
         res.status(500).send("เกิดข้อผิดพลาด");
     }
 });
+
+app.get('/fake-payment/:fee_id', (req, res) => {
+    const feeId = req.params.fee_id;
+
+    const sql = `UPDATE service_fees SET payment_status = 'Paid' WHERE fee_id = ?`;
+    db.run(sql, [feeId], (err) => {
+        if (err) {
+            console.error("❌ Error updating payment:", err);
+            return res.status(500).send("❌ ไม่สามารถอัปเดตสถานะการชำระเงิน");
+        }
+
+        res.redirect('/bills'); // กลับไปที่หน้าบิล
+    });
+});
+
+app.get('/payment/:fee_id', (req, res) => {
+    const feeId = req.params.fee_id;
+    res.render('payment', { fee_id: feeId });
+});
+
+
+app.post('/process-payment/:fee_id', (req, res) => {
+    const feeId = req.params.fee_id;
+
+    console.log("Fake payment processed:", req.body);
+
+    const sql = `UPDATE service_fees SET payment_status = 'Paid' WHERE fee_id = ?`;
+    db.run(sql, [feeId], (err) => {
+        if (err) {
+            console.error("❌ Error updating payment:", err);
+            return res.status(500).send("❌ ไม่สามารถอัปเดตสถานะการชำระเงิน");
+        }
+
+        res.redirect('/bills'); // กลับไปหน้าบิล
+    });
+});
+
