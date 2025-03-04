@@ -27,11 +27,21 @@
                     <% } %>
                     <a class="btn btn-danger d-flex align-items-center justify-content-center" href="/logout" style="width: 100px; height: 50px; border-radius: 4px;" role="button">Logout</a>
                 </div>
-                <% if (session.hasNotifications) { %>
-                    <script>
-                        alert("📩 คุณมีข้อความแจ้งเตือนใหม่!");
-                    </script>
-                <% } %>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        let hasNotifications = <%= JSON.stringify(session.hasNotifications) %>;
+                        let storedNotification = sessionStorage.getItem("hasNotifications");
+                
+                        if (hasNotifications) {
+                            if (storedNotification !== "false") {
+                                alert("📩 คุณมีข้อความแจ้งเตือนใหม่!");
+                            }
+                            sessionStorage.setItem("hasNotifications", "true");
+                        } else {
+                            sessionStorage.setItem("hasNotifications", "false");
+                        }
+                    });
+                </script>
             <% } else { %>
                 <a class="btn btn-primary d-flex align-items-center justify-content-center" href="/login" style="width: 100px; height: 50px; border-radius: 4px;" role="button">Login</a>
             <% } %>
@@ -54,16 +64,19 @@
                         <a class="nav-link" href="/registercustomers">ลงทะเบียนลูกค้า</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/editcustomers">จัดการข้อมูลลูกค้า</a> 
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="/viewappointments">ตารางนัดหมาย</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/treatment_rec">บันทึกการรักษา</a> <!-- treatment_rec -->
+                        <a class="nav-link" href="/treatment_records">บันทึกการรักษา</a> <!-- treatment_rec -->
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/contact">Contact</a> <!-- treatment-list -->  <!-- editcustomers --> <!-- appointment --> <!-- editdcustomers -->  <!-- alert -->
+                        <a class="nav-link" href="/treatment-list">แจ้งบิลค่ารักษา</a> <!-- treatment-list -->  <!-- editcustomers --> <!-- appointment --> <!-- editdcustomers -->  <!-- alert -->
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/editcustomers">แก้ไขข้อมูลลูกค้า</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/alert">แจ้งเตือนใกล้ถึงกำหนด</a>
                     </li>
                 </ul>
             </div>
@@ -81,10 +94,10 @@
                             <a class="nav-link active" aria-current="page" href="/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/regappointments">นัดหมอ</a>
+                            <a class="nav-link" href="/appointments">นัดหมอ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/services">Services</a><!-- bills -->
+                            <a class="nav-link" href="/bills">ค่ารักษา</a><!-- bills -->
                         </li>
                     </ul>
                 </div>

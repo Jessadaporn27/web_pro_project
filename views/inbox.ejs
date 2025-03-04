@@ -1,50 +1,59 @@
 <%- include("head", { Title: "Inbox" }) %>
-<body>
-    <div class="container">
-        <h2>📩 กล่องข้อความ</h2>
-        
-        <% if (messages.length === 0) { %>
-            <p>ไม่มีข้อความใหม่</p>
-        <% } else { %>
-            <ul class="list-group">
-                <% messages.forEach(msg => { %>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong><%= msg.message %></strong>
-                            <small class="text-muted d-block">📅 <%= msg.created_at %></small>
-                        </div>
-                        <% if (msg.seen === 0) { %>
-                            <button class="btn btn-success btn-sm mark-as-read" data-id="<%= msg.id %>">อ่านแล้ว</button>
-                        <% } else { %>
-                            <span class="badge bg-secondary">อ่านแล้ว</span>
-                        <% } %>
-                    </li>
-                <% }); %>
-            </ul>
-        <% } %>
 
-        <a href="/" class="btn btn-primary mt-3">กลับหน้าหลัก</a>
-    </div>
+    <body>
+        <div class="container">
+            <h2>📩 กล่องข้อความ</h2>
 
-    <script>
-        document.querySelectorAll('.mark-as-read').forEach(button => {
-            button.addEventListener('click', function () {
-                const notifId = this.getAttribute('data-id');
+            <% if (messages.length===0) { %>
+                <p>ไม่มีข้อความ</p>
+                <% } else { %>
+                    <ul class="list-group">
+                        <% messages.forEach(msg=> { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>
+                                        <%= msg.message %>
+                                    </strong>
+                                    <small class="text-muted d-block">📅 <%= msg.created_at %></small>
+                                </div>
+                                <% if (msg.seen===0) { %>
+                                    <button class="btn btn-success btn-sm mark-as-read" data-id="<%= msg.id %>" onclick="markAsRead(<%= msg.id %>)">
+                                        อ่านแล้ว
+                                    </button>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary">อ่านแล้ว</span>
+                                        <% } %>
+                            </li>
+                            <% }); %>
+                    </ul>
+                    <% } %>
 
+                        <a href="/" class="btn btn-primary mt-3">กลับหน้าหลัก</a>
+        </div>
+
+        <script>
+            function markAsRead(notificationId) {
                 fetch('/mark-as-read', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: notifId })
+                    body: JSON.stringify({ id: notificationId })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        this.parentElement.innerHTML = '<span class="badge bg-secondary">อ่านแล้ว</span>';
+                        document.querySelector(`[data-id="${notificationId}"]`).parentElement.innerHTML =
+                            '<span class="badge bg-secondary">อ่านแล้ว</span>';
+        
+                        if (data.unread === 0) {
+                            sessionStorage.setItem("hasNotifications", "false");
+                        }
                     } else {
-                        alert("อัปเดตไม่สำเร็จ");
+                        alert("เกิดข้อผิดพลาด!");
                     }
-                });
-            });
-        });
-    </script>
-</body>
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        </script>
+        
+        
+    </body>
