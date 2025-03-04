@@ -25,7 +25,14 @@
                         <td><%= item.appointment_date %>|   <%= item.appointment_time %></td> <!-- เวลานัดหมอ -->
                         <td><%= item.status %></td>
                         <td><%= item.notes %></td>
-                        <td><button type="button" class="btn btn-primary" onclick="sendAlert(<%= item.customer_id %>, <%= item.appointment_id %>)">Alert</button></td>
+                        <td>
+                            <% if (item.notified === 1) { %>
+                                <button type="button" class="btn btn-secondary" disabled>แจ้งแล้ว</button>
+                            <% } else { %>
+                                <button type="button" class="btn btn-primary" onclick="sendAlert(<%= item.customer_id %>, <%= item.appointment_id %>, this)">Alert</button>
+                            <% } %>
+                        </td>
+                        
                     </tr>
                     <% }); %>
                 </tbody>
@@ -33,10 +40,10 @@
         </div>
     </div>
     <script>
-        function sendAlert(customer_id, appointment_id) {
+        function sendAlert(customer_id, appointment_id, button) {
             const message = prompt("กรอกข้อความแจ้งเตือน:");
             if (!message) return;
-
+    
             fetch('/send-notification', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -46,6 +53,10 @@
             .then(data => {
                 if (data.success) {
                     alert("แจ้งเตือนสำเร็จ!");
+                    button.innerText = "แจ้งแล้ว";
+                    button.classList.remove("btn-primary");
+                    button.classList.add("btn-secondary");
+                    button.disabled = true;
                 } else {
                     alert("มีข้อผิดพลาด!");
                 }
@@ -53,5 +64,6 @@
             .catch(error => console.error('Error:', error));
         }
     </script>
+    
 </body>
 </html>

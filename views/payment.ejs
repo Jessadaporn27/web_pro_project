@@ -1,0 +1,34 @@
+<%- include("head", { Title: "Credit Card Payment" }) %>
+<body>
+    <div class="container">
+        <h2>💳 ชำระเงินด้วยบัตรเครดิต</h2>
+        <p>กรุณากรอกข้อมูลบัตรเครดิตเพื่อดำเนินการชำระเงิน</p>
+
+        <form action="/process-payment/<%= fee_id %>" method="POST">
+            <div class="form-group">
+                <label>หมายเลขบัตรเครดิต</label>
+                <input type="text" name="card_number" class="form-control" required placeholder="1234 5678 9012 3456">
+            </div>
+
+            <div class="form-group">
+                <label>ชื่อบนบัตร</label>
+                <input type="text" name="card_name" class="form-control" required placeholder="ชื่อ-นามสกุล">
+            </div>
+
+            <div class="form-row">
+                <div class="col">
+                    <label>วันหมดอายุ (MM/YY)</label>
+                    <input type="text" name="expiry_date" class="form-control" required placeholder="MM/YY">
+                </div>
+                <div class="col">
+                    <label>CVV</label>
+                    <input type="text" name="cvv" class="form-control" required placeholder="123">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success mt-3">✅ ยืนยันการชำระเงิน</button>
+        </form>
+
+        <a href="/bills" class="btn btn-secondary mt-3">⬅️ ย้อนกลับ</a>
+    </div>
+</body>

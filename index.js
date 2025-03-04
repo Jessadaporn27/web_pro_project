@@ -51,7 +51,6 @@ app.get('/login', function (req, res) {
 app.get('/login_get', function (req, res) {
     let { loginType, username, email, password } = req.query;
 
-    console.log(req.query);
     let sql = "";
     let params = [];
 
@@ -72,14 +71,11 @@ app.get('/login_get', function (req, res) {
         `;
         params = [username, password];
     }
-    console.log(`"SQL:"\t${sql}`);
-    console.log(`"Params:"\t${params}`);
     db.get(sql, params, (err, user) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ status: "error", message: "Server error" });
         }
-        console.log(`"User:"\n${user}`);
         if (!user) {
             return res.json({ status: "error", message: "ไม่พบบัญชีผู้ใช้" });
         }
@@ -93,11 +89,7 @@ app.get('/login_get', function (req, res) {
             req.session.customer_id = null; // Admin ไม่มี customer_id
             return res.redirect('/'); // เปลี่ยนไปหน้า admin
         } else {
-            req.session.customer_id = user.customer_id; // เก็บ customer_id ถ้ามี
-        }
-
-        // ✅ ตรวจสอบว่ามีการแจ้งเตือนใหม่หรือไม่ (เฉพาะลูกค้า)
-        if (user.customer_id) {
+            req.session.customer_id = user.customer_id;
             const notifSql = "SELECT COUNT(*) AS count FROM notifications WHERE customer_id = ? AND seen = 0";
             db.get(notifSql, [user.customer_id], (err, row) => {
                 if (err) {
@@ -107,11 +99,10 @@ app.get('/login_get', function (req, res) {
 
                 req.session.hasNotifications = row.count > 0;  // ✅ ตั้งค่าตัวแปร session
                 res.redirect('/');
-            });
-        } else {
-            res.redirect('/'); // Admin ไม่ต้องเช็คแจ้งเตือน
+                console.log(notifSql);
+            }); // เก็บ customer_id ถ้ามี
         }
-        console.log(session)
+        
     });
 });
 
@@ -199,15 +190,35 @@ app.get('/getcustomers', function (req, res) {
 // });
 
 app.get('/alert', function (req, res) {
-    const sql = 'select * from customers cross join appointments where appointments.customer_id = customers.customer_id;';
+    const sql = `
+        SELECT 
+            appointments.appointment_id,
+            customers.customer_id, 
+            customers.first_name, 
+            customers.last_name,
+            appointments.appointment_date,
+            appointments.appointment_time,
+            appointments.notes,
+            appointments.status,
+            CASE 
+                WHEN notifications.id IS NOT NULL THEN 1 
+                ELSE 0 
+            END AS notified
+        FROM appointments
+        INNER JOIN customers ON appointments.customer_id = customers.customer_id
+        LEFT JOIN notifications ON appointments.appointment_id = notifications.appointment_id
+    `;
+
     db.all(sql, [], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('alert', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('alert', { data: results, session: req.session || {} });
     });
 });
+
+
 
 app.get('/editcustomers', function (req, res) {
     const sql = 'SELECT * FROM customers;';
@@ -217,7 +228,7 @@ app.get('/editcustomers', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('editcustomers', { session: req.session || {} , data: results }); // ส่งข้อมูลไปที่ view
+        res.render('editcustomers', { data: results, session: req.session || {} }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -271,90 +282,18 @@ app.get('/get_delete', function (req, res) {
 });
 
 app.get('/viewappointments', function (req, res) {
-    const sql = `
-        SELECT 
-            appointments.appointment_id, 
-            customers.first_name || ' ' || customers.last_name AS customer_name,
-            dentists.first_name || ' ' || dentists.last_name AS dentist_name,
-            employees.first_name || ' ' || employees.last_name AS employee_name,
-            appointments.appointment_date,
-            appointments.appointment_time,
-            appointments.status,
-            appointments.notes
-        FROM appointments
-        JOIN customers ON appointments.customer_id = customers.customer_id
-        JOIN dentists ON appointments.dentist_id = dentists.dentist_id
-        JOIN employees ON appointments.employee_id = employees.employee_id;
-    `;
+    const sql = 'SELECT * FROM appointments;';
 
-    db.all(sql, [], (err, results) => {
+    db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
         if (err) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('appointments', { session: req.session || {} , data: results }); // ส่งข้อมูลไปที่ view
+        res.render('appointments', { data: results, session: req.session || {} }); // ส่งข้อมูลไปที่ view
     });
 });
 
-app.post('/updateStatusAppointments', function (req, res) {
-    const { appointment_id, status } = req.body;
-    
-    const sql = `UPDATE appointments SET status = ? WHERE appointment_id = ?`;
-    console.log(sql);
-    db.run(sql, [status, appointment_id], function (err) {
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
-        }
-        res.send({ success: true, message: "Status updated successfully" });
-    });
-});
-
-app.get('/bookappointmentsAdmin', function (req, res) {
-    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers;`;
-    let sql_dentists = `SELECT dentist_id, first_name, last_name FROM dentists;`;
-    let sql_employees = `SELECT employee_id, first_name, last_name FROM employees;`;
-
-    db.all(sql_customers, [], (err, customers) => {
-        if (err) {
-            console.error("Error fetching customers:", err.message);
-            return res.status(500).send("Error fetching customer list.");
-        }
-
-        db.all(sql_dentists, [], (err, dentists) => {
-            if (err) {
-                console.error("Error fetching dentists:", err.message);
-                return res.status(500).send("Error fetching dentist list.");
-            }
-
-            db.all(sql_employees, [], (err, employees) => {
-                if (err) {
-                    console.error("Error fetching employees:", err.message);
-                    return res.status(500).send("Error fetching employee list.");
-                }
-
-                res.render('bookappointmentsAdmin', { session: req.session || {} , customers, dentists, employees});
-            });
-        });
-    });
-});
-
-
-
-app.post('/confirmbookingAdmin', function (req, res) {
-    let { customer_id, dentist_id, appointment_date, appointment_time } = req.body;
-    
-    let sql = `INSERT INTO appointments (customer_id, dentist_id, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, 'Scheduled');`;
-
-    db.run(sql, [customer_id, dentist_id, appointment_date, appointment_time], function (err) {
-        if (err) {
-            console.error("Error booking appointment:", err.message);
-            return res.status(500).send("Error booking appointment.");
-        }
-        res.redirect('/viewappointments'); // กลับไปหน้า appointments
-    });
-});
-app.get('/regappointments', function (req, res) {
+app.get('/appointments', function (req, res) {
     const sql = 'SELECT appointment_date FROM appointments;';
 
     db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
@@ -362,60 +301,48 @@ app.get('/regappointments', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('regappointments', { session: req.session || {} , data: results }); // ส่งข้อมูลไปที่ view
+        res.render('regappointments', { data: results }); // ส่งข้อมูลไปที่ view
     });
 });
 
-app.get('/bookappointments', function (req, res) {
-    let appointment_date = req.query.date; // รับวันที่จาก query parameter
-    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers;`;
-    let sql_dentists = `SELECT dentist_id, first_name, last_name FROM dentists;`;
-
-    db.all(sql_customers, [], (err, customers) => {
-        if (err) {
-            console.error("Error fetching customers:", err.message);
-            return res.status(500).send("Error fetching customer list.");
-        }
-
-        db.all(sql_dentists, [], (err, dentists) => {
-            if (err) {
-                console.error("Error fetching dentists:", err.message);
-                return res.status(500).send("Error fetching dentist list.");
-            }
-
-            res.render('bookappointments', { session: req.session || {} , customers, dentists, appointment_date });
-        });
-    });
+app.get('/bookappointment', function (req, res) {
+    let appointmentDate = req.query.date;
+    res.render('bookappointments', { date: appointmentDate });
 });
 
 app.post('/confirmbooking', function (req, res) {
-    let { customer_id, dentist_id, appointment_date, appointment_time } = req.body;
-    
-    let sql = `INSERT INTO appointments (customer_id, dentist_id, employee_id, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?);`;
+    let appointmentDate = req.body.appointment_date;
+    let sql = `INSERT INTO appointments (appointment_date) VALUES (?);`;
 
-    db.run(sql, [customer_id, dentist_id, 1, appointment_date, appointment_time, 'Scheduled'], function (err) {
+    db.run(sql, [appointmentDate], function (err) {
         if (err) {
-            console.error("Error booking appointment:", err.message);
-            return res.status(500).send("Error booking appointment.");
+            return res.send("Error booking appointment.");
         }
-        res.redirect('/regappointments'); // กลับไปหน้า appointments
+        res.redirect('/appointments'); // กลับไปหน้า appointments
     });
 });
 
 
-
-
-
 app.post('/send-notification', (req, res) => {
-    console.log("Received Data:", req.body);
+    console.log("📩 Received Data:", req.body);
+
     const { customer_id, appointment_id, message } = req.body;
 
-    const sql = "INSERT INTO notifications (customer_id, appointment_id, message) VALUES (?, ?, ?)";
+    if (!customer_id || !appointment_id || !message) {
+        console.error("❌ Missing Data", { customer_id, appointment_id, message });
+        return res.status(400).json({ success: false, error: "ข้อมูลไม่ครบถ้วน" });
+    }
+
+    const sql = `INSERT INTO notifications (customer_id, appointment_id, message) 
+                 VALUES (?, ?, ?)`;  
+
     db.run(sql, [customer_id, appointment_id, message], function (err) {
         if (err) {
+            console.error("❌ Database Error:", err.message);
             return res.status(500).json({ success: false, error: err.message });
         }
-        res.json({ success: true, message: '📨 แจ้งเตือนสำเร็จ' });
+        console.log("✅ Inserted ID:", this.lastID); // Debug log
+        res.json({ success: true, message: '📨 แจ้งเตือนสำเร็จ', inserted_id: this.lastID });
     });
 });
 
@@ -444,7 +371,7 @@ app.get('/bills', (req, res) => {
     }
 
     const sql = `
-        SELECT sf.fee_id, sf.treatment_details, sf.amount, tr.treatment_date
+        SELECT sf.fee_id, sf.treatment_details, sf.amount, tr.treatment_date, sf.payment_status
         FROM service_fees sf
         JOIN treatment_rec tr ON sf.treatment_id = tr.treatment_id
         WHERE sf.customer_id = ?
@@ -457,7 +384,7 @@ app.get('/bills', (req, res) => {
             return res.status(500).send("❌ ไม่สามารถดึงข้อมูลใบเสร็จ");
         }
 
-        res.render('bills', { bills });
+        res.render('bills', { bills ,session: req.session || {} });
     });
 });
 
@@ -480,81 +407,53 @@ app.get('/inbox', (req, res) => {
 
 app.post('/mark-as-read', (req, res) => {
     const { id } = req.body;
-
-    if (!id) {
-        return res.status(400).json({ success: false, message: "ไม่พบ ID ของข้อความ" });
-    }
+    console.log("Marking as read:", id);
 
     const sql = "UPDATE notifications SET seen = 1 WHERE id = ?";
-
     db.run(sql, [id], function (err) {
         if (err) {
-            console.error("Error updating notification:", err);
-            return res.status(500).json({ success: false, message: "ไม่สามารถอัปเดตฐานข้อมูล" });
+            return res.status(500).json({ success: false, error: err.message });
         }
 
-        res.json({ success: true, message: "อัปเดตสำเร็จ" });
-    });
-});
-
-app.get('/treatment_rec', (req, res) => {
-    let sqlCustomers = "SELECT customer_id, first_name, last_name FROM customers";
-    let sqlDentists = "SELECT dentist_id, first_name, last_name FROM dentists";
-
-    db.all(sqlCustomers, (err, customers) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
-        }
-
-        db.all(sqlDentists, (err, dentists) => {
+        // ตรวจสอบจำนวนแจ้งเตือนที่ยังไม่ได้อ่าน
+        db.get("SELECT COUNT(*) AS unread FROM notifications WHERE seen = 0", [], (err, row) => {
             if (err) {
-                console.error(err);
-                return res.status(500).send("Database error");
+                return res.status(500).json({ success: false, error: err.message });
             }
 
-            res.render('treatment_rec', { session: req.session || {} , customers, dentists });
+            req.session.hasNotifications = row.unread > 0; // อัปเดต session
+            res.json({ success: true, unread: row.unread });
         });
     });
 });
 
+
+
+app.get('/treatment_records', (req,res) => {
+    res.render('treatment_rec',{session: req.session || {}});
+})
 
 app.get('/savetreatment', function (req, res) {
     let formdata = {
         customer_id: req.query.customer_id,
         dentist_id: req.query.dentist_id,
         diagnosis: req.query.diagnosis,
-        FDI: req.query.FDI || null,  // ถ้าไม่ใส่ FDI ให้เป็น NULL
+        FDI: req.query.FDI,
         treatment_details: req.query.treatment_details,
         treatment_date: req.query.treatment_date,
-        next_appointment_date: req.query.next_appointment_date || null  // ถ้าไม่ใส่ให้เป็น NULL
+        next_appointment_date: req.query.next_appointment_date
     };
-
-    let sql = `INSERT INTO treatment_rec 
-                (customer_id, dentist_id, diagnosis, FDI, treatment_details, treatment_date, next_appointment_date) 
-               VALUES (?, ?, ?, ?, ?, ?, ?)`;
-
-    db.run(sql, 
-        [
-            formdata.customer_id, 
-            formdata.dentist_id, 
-            formdata.diagnosis, 
-            formdata.FDI, 
-            formdata.treatment_details, 
-            formdata.treatment_date, 
-            formdata.next_appointment_date
-        ], 
-        (err) => {
-            if (err) {
-                console.error('Error inserting data:', err.message);
-                return res.status(500).send("Error saving treatment record");
-            }
-            console.log('Data inserted successfully');
-            res.redirect('/treatment_rec');  // กลับไปหน้ารายการ treatment
+    let sql = `INSERT INTO treatment_rec (customer_id, dentist_id, diagnosis, FDI, treatment_details, treatment_date, next_appointment_date) 
+               VALUES (${formdata.customer_id}, ${formdata.dentist_id}, "${formdata.diagnosis}", ${formdata.FDI}, "${formdata.treatment_details}", "${formdata.treatment_date}", "${formdata.next_appointment_date}")`;
+    
+    console.log(sql);
+    db.run(sql, (err) => {
+        if (err) {
+            return console.error('Error inserting data:', err.message);
         }
-    );
+        console.log('Data inserted successful');
+    });
 });
-
 app.get("/treatment-list", async (req, res) => {
     const db = await openDb();
     try {
@@ -565,13 +464,13 @@ app.get("/treatment-list", async (req, res) => {
             WHERE tr.treatment_id NOT IN (SELECT treatment_id FROM service_fees)
         `);
 
-        res.render("treatment-list", { treatments });
+        res.render("treatment-list", { treatments, session: req.session || {} });
     } catch (error) {
-        console.error("❌ Error fetching treatment data:", error);
+        console.error("Error fetching treatment data:", error);
         res.status(500).send("เกิดข้อผิดพลาด");
     }
 });
-
+/* 
 app.get("/create-bill", async (req, res) => {
     const db = await openDb();
 
@@ -598,7 +497,7 @@ app.get("/create-bill", async (req, res) => {
         console.error("❌ Error fetching data:", error);
         res.status(500).send("Internal Server Error");
     }
-});
+}); */
 
 
 app.post("/create-bill", async (req, res) => {
@@ -623,3 +522,40 @@ app.post("/create-bill", async (req, res) => {
         res.status(500).send("เกิดข้อผิดพลาด");
     }
 });
+
+app.get('/fake-payment/:fee_id', (req, res) => {
+    const feeId = req.params.fee_id;
+
+    const sql = `UPDATE service_fees SET payment_status = 'Paid' WHERE fee_id = ?`;
+    db.run(sql, [feeId], (err) => {
+        if (err) {
+            console.error("❌ Error updating payment:", err);
+            return res.status(500).send("❌ ไม่สามารถอัปเดตสถานะการชำระเงิน");
+        }
+
+        res.redirect('/bills'); // กลับไปที่หน้าบิล
+    });
+});
+
+app.get('/payment/:fee_id', (req, res) => {
+    const feeId = req.params.fee_id;
+    res.render('payment', { fee_id: feeId, session: req.session || {} });
+});
+
+
+app.post('/process-payment/:fee_id', (req, res) => {
+    const feeId = req.params.fee_id;
+
+    console.log("Fake payment processed:", req.body);
+
+    const sql = `UPDATE service_fees SET payment_status = 'Paid' WHERE fee_id = ?`;
+    db.run(sql, [feeId], (err) => {
+        if (err) {
+            console.error("❌ Error updating payment:", err);
+            return res.status(500).send("❌ ไม่สามารถอัปเดตสถานะการชำระเงิน");
+        }
+
+        res.redirect('/bills'); // กลับไปหน้าบิล
+    });
+});
+
