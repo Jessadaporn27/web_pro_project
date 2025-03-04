@@ -228,7 +228,7 @@ app.get('/editcustomers', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('editcustomers', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('editcustomers', { data: results, session: req.session || {} }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -289,7 +289,7 @@ app.get('/viewappointments', function (req, res) {
             console.error(err);
             return res.status(500).send("Database error");
         }
-        res.render('appointments', { data: results }); // ส่งข้อมูลไปที่ view
+        res.render('appointments', { data: results, session: req.session || {} }); // ส่งข้อมูลไปที่ view
     });
 });
 
@@ -430,7 +430,7 @@ app.post('/mark-as-read', (req, res) => {
 
 
 app.get('/treatment_records', (req,res) => {
-    res.render('treatment_rec');
+    res.render('treatment_rec',{session: req.session || {}});
 })
 
 app.get('/savetreatment', function (req, res) {
@@ -464,7 +464,7 @@ app.get("/treatment-list", async (req, res) => {
             WHERE tr.treatment_id NOT IN (SELECT treatment_id FROM service_fees)
         `);
 
-        res.render("treatment-list", { treatments });
+        res.render("treatment-list", { treatments, session: req.session || {} });
     } catch (error) {
         console.error("Error fetching treatment data:", error);
         res.status(500).send("เกิดข้อผิดพลาด");
@@ -539,7 +539,7 @@ app.get('/fake-payment/:fee_id', (req, res) => {
 
 app.get('/payment/:fee_id', (req, res) => {
     const feeId = req.params.fee_id;
-    res.render('payment', { fee_id: feeId });
+    res.render('payment', { fee_id: feeId, session: req.session || {} });
 });
 
 

@@ -13,7 +13,6 @@
                         <th>รายละเอียด</th>
                         <th>วันที่รักษา</th>
                         <th>จำนวนเงิน (บาท)</th>
-                        <th>สถานะ</th>
                         <th>การชำระเงิน</th>
                     </tr>
                 </thead>
@@ -24,13 +23,6 @@
                             <td><%= bill.treatment_details %></td>
                             <td><%= bill.treatment_date %></td>
                             <td>฿<%= bill.amount %></td>
-                            <td>
-                                <% if (bill.payment_status === 'Paid') { %>
-                                    ✅ ชำระแล้ว 
-                                <% } else { %>
-                                    ⏳ รอดำเนินการ
-                                <% } %>
-                            </td>
                             <td>
                                 <% if (bill.payment_status !== 'Paid') { %>
                                     <a href="/payment/<%= bill.fee_id %>" class="btn btn-primary">
