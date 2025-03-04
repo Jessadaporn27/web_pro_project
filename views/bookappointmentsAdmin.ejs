@@ -5,8 +5,6 @@
     <div class="container mt-5">
         <h2>Confirm Appointment</h2>
     
-        <p>Are you sure you want to book an appointment on <strong><%= appointment_date %></strong>?</p>
-    
         <form action="/confirmbooking" method="post">
             <!-- เลือกลูกค้า -->
             <div class="form-group">
@@ -31,20 +29,27 @@
                     <% }); %>
                 </select>
             </div>
+
+            <!-- เลือกพนักงาน (Employee) -->
+            <div class="form-group">
+                <label for="employee_id">Select Employee:</label>
+                <select class="form-control" id="employee_id" name="employee_id" required>
+                    <% employees.forEach((employee) => { %>
+                        <option value="<%= employee.employee_id %>">
+                            <%= employee.first_name %> <%= employee.last_name %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
     
             <!-- เลือกเวลานัดหมาย -->
             <div class="form-group">
                 <label for="appointment_time">Select Time:</label>
                 <input type="time" class="form-control" id="appointment_time" name="appointment_time" required>
             </div>
-    
-            <input type="hidden" name="appointment_date" value="<%= appointment_date %>">
-    
+        
             <button type="submit" class="btn btn-primary">Confirm Booking</button>
         </form>
     </div>
-    
-    
-    
 </body>
 </html>
