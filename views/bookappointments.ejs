@@ -1,7 +1,6 @@
 <%- include("head", {Title: "Book Appointments"}) %>
 
 <body>
-    <%- include("nav", {session: session}) %>
     <div class="container mt-5">
         <h2>Confirm Appointment</h2>
     
@@ -18,24 +17,6 @@
                         </option>
                     <% }); %>
                 </select>
-            </div>
-    
-            <!-- เลือกหมอ -->
-            <div class="form-group">
-                <label for="dentist_id">Select Dentist:</label>
-                <select class="form-control" id="dentist_id" name="dentist_id" required>
-                    <% dentists.forEach((dentist) => { %>
-                        <option value="<%= dentist.dentist_id %>">
-                            <%= dentist.first_name %> <%= dentist.last_name %>
-                        </option>
-                    <% }); %>
-                </select>
-            </div>
-    
-            <!-- เลือกเวลานัดหมาย -->
-            <div class="form-group">
-                <label for="appointment_time">Select Time:</label>
-                <input type="time" class="form-control" id="appointment_time" name="appointment_time" required>
             </div>
     
             <input type="hidden" name="appointment_date" value="<%= appointment_date %>">

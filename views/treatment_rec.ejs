@@ -1,44 +1,61 @@
-<%- include('head', { Title: "บันทึกการรักษา" }) %>
+<%- include("head", {Title: "Treatment Records"}) %>
+
 <body>
     <div class="container mt-5">
         <h2>Treatment Record</h2>
         <form class="form-horizontal" action="/savetreatment" method="get">
-            
+
+            <!-- Customer Dropdown -->
             <div class="form-group">
-                <label for="customer_id">Customer ID:</label>
-                <input type="number" class="form-control" id="customer_id" name="customer_id" required>
+                <label for="customer_id">Customer Name:</label>
+                <select class="form-control" id="customer_id" name="customer_id" required>
+                    <option value="">Select Customer</option>
+                    <% customers.forEach((customer) => { %>
+                        <option value="<%= customer.customer_id %>">
+                            <%= customer.first_name %> <%= customer.last_name %>
+                        </option>
+                    <% }); %>
+                </select>
             </div>
-            
+
+            <!-- Dentist Dropdown -->
             <div class="form-group">
-                <label for="dentist_id">Dentist ID:</label>
-                <input type="number" class="form-control" id="dentist_id" name="dentist_id" required>
+                <label for="dentist_id">Dentist Name:</label>
+                <select class="form-control" id="dentist_id" name="dentist_id" required>
+                    <option value="">Select Dentist</option>
+                    <% dentists.forEach((dentist) => { %>
+                        <option value="<%= dentist.dentist_id %>">
+                            <%= dentist.first_name %> <%= dentist.last_name %>
+                        </option>
+                    <% }); %>
+                </select>
             </div>
-            
+
             <div class="form-group">
                 <label for="diagnosis">Diagnosis:</label>
                 <textarea class="form-control" id="diagnosis" name="diagnosis" required></textarea>
             </div>
-            
+
             <div class="form-group">
                 <label for="FDI">FDI (Tooth Numbering):</label>
                 <input type="text" class="form-control" id="FDI" name="FDI">
             </div>
-            
+
             <div class="form-group">
                 <label for="treatment_details">Treatment Details:</label>
                 <textarea class="form-control" id="treatment_details" name="treatment_details" required></textarea>
             </div>
-            
+
             <div class="form-group">
                 <label for="treatment_date">Treatment Date:</label>
                 <input type="date" class="form-control" id="treatment_date" name="treatment_date" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="next_appointment_date">Next Appointment Date (Optional):</label>
                 <input type="date" class="form-control" id="next_appointment_date" name="next_appointment_date">
             </div>
-            
+
             <div class="form-group mt-3">
                 <button type="submit" class="btn btn-primary">Save Treatment</button>
             </div>
