@@ -430,9 +430,8 @@ app.get('/bookappointments', function (req, res) {
 });
 
 app.post('/confirmbooking', function (req, res) {
-    let { customer_id, dentist_id, appointment_date, appointment_time } = req.body;
-    
-    let sql = `INSERT INTO appointments (customer_id, dentist_id, employee_id, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?);`;
+    let appointmentDate = req.body.appointment_date;
+    let sql = `INSERT INTO appointments (appointment_date) VALUES (?);`;
 
     db.run(sql, [customer_id, dentist_id, 1, appointment_date, appointment_time, 'Scheduled'], function (err) {        if (err) {
             console.error("Error booking appointment:", err.message);
@@ -549,26 +548,9 @@ app.post('/mark-as-read', (req, res) => {
 
 
 
-app.get('/treatment_rec', (req, res) => {
-    let sqlCustomers = "SELECT customer_id, first_name, last_name FROM customers";
-    let sqlDentists = "SELECT dentist_id, first_name, last_name FROM dentists";
-
-    db.all(sqlCustomers, (err, customers) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Database error");
-        }
-
-        db.all(sqlDentists, (err, dentists) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send("Database error");
-            }
-
-            res.render('treatment_rec', { session: req.session || {} , customers, dentists });
-        });
-    });
-});
+app.get('/treatment_rec', (req,res) => {
+    res.render('treatment_rec',{session: req.session || {}});
+})
 
 app.get('/savetreatment', function (req, res) {
     let formdata = {
