@@ -25,10 +25,8 @@
                 date.setDate(today.getDate() + i);
                 let dateString = date.toISOString().split('T')[0];
 
-                // ดึงหมอที่มีนัดในวันนี้
                 let dentistsWithAppointments = Object.keys(bookedAppointments[dateString] || {});
                 
-                // ถ้าหมอมีนัดแค่คนเดียว ให้เพิ่มหมอที่เหลือให้ว่างทั้งหมด
                 let allDentistsForDay = new Set([...dentistsWithAppointments, ...dentists_list.map(d => d.first_name + " " + d.last_name)]);
 
         %>
