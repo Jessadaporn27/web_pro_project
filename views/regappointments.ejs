@@ -1,53 +1,86 @@
-<%- include("head", {Title: "View Appointments"}) %>
+<%- include("head", {Title: "Appointment Availability"}) %>
 
 <body>
-    <%- include("nav", {session: session}) %>
     <div class="container mt-5">
         <h2>Appointment Availability</h2>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% 
-                    let today = new Date();
-                    let bookedDates = data.map(item => item.appointment_date);
-                    
-                    for (let i = 0; i < 30; i++) {  
-                        let date = new Date();
-                        date.setDate(today.getDate() + i);
-                        let dateString = date.toISOString().split('T')[0];
-            
-                        let isBooked = bookedDates.includes(dateString);
-                %>
-                <tr class="<%= isBooked ? 'table-danger' : 'table-success' %>">
-                    <td><%= dateString %></td>
-                    <td><%= isBooked ? 'Booked' : 'Available' %></td>
-                    <td>
-                        <% if (!isBooked) { %>
-                            <a href="/bookappointments?date=<%= dateString %>" class="btn btn-primary">Book</a>
-                        <% } else { %>
-                            <button class="btn btn-secondary" disabled>Booked</button>
-                        <% } %>
-                    </td>
-                </tr>
-                <% } %>
-            </tbody>
-            
-        </table>
-    </div>
-    <script>
-        function bookAppointment(date) {
-            $.post("/bookappointments", { appointment_date: date }, function(response) {
-                alert(response.message);
-                location.reload(); // รีเฟรชหน้าหลังจองสำเร็จ
-            }); 
-        }
-    </script>
-</body>
 
+        <% 
+            let today = new Date();
+            let bookedAppointments = {}; 
+
+            // จัดรูปแบบข้อมูลการจอง
+            appointments.forEach((item) => { 
+                if (!bookedAppointments[item.appointment_date]) {
+                    bookedAppointments[item.appointment_date] = {};
+                }
+                let dentistName = item.dentist_first_name + " " + item.dentist_last_name;
+                if (!bookedAppointments[item.appointment_date][dentistName]) {
+                    bookedAppointments[item.appointment_date][dentistName] = [];
+                }
+                bookedAppointments[item.appointment_date][dentistName].push(item.appointment_time);
+            });
+
+            for (let i = 0; i < 30; i++) {  
+                let date = new Date();
+                date.setDate(today.getDate() + i);
+                let dateString = date.toISOString().split('T')[0];
+
+                // ดึงหมอที่มีนัดในวันนี้
+                let dentistsWithAppointments = Object.keys(bookedAppointments[dateString] || {});
+                
+                // ถ้าหมอมีนัดแค่คนเดียว ให้เพิ่มหมอที่เหลือให้ว่างทั้งหมด
+                let allDentistsForDay = new Set([...dentistsWithAppointments, ...dentists_list.map(d => d.first_name + " " + d.last_name)]);
+
+        %>
+        <div class="mt-4">
+            <h3 class="text-primary">📅 Date: <%= dateString %></h3>
+
+            <% allDentistsForDay.forEach((dentist) => { %>
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        🦷 Dentist: <%= dentist %>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                    let bookedTimes = bookedAppointments[dateString]?.[dentist] || [];
+                                    let timeSlots = [];
+                                    for (let hour = 9; hour <= 18; hour++) {
+                                        let time = hour.toString().padStart(2, '0') + ":00";
+                                        timeSlots.push(time);
+                                    }
+
+                                    timeSlots.forEach((time) => {
+                                        let isBooked = bookedTimes.includes(time);
+                                %>
+                                <tr class="<%= isBooked ? 'table-danger' : 'table-success' %>">
+                                    <td><%= time %></td>
+                                    <td><%= isBooked ? 'Booked' : 'Available' %></td>
+                                    <td>
+                                        <% if (!isBooked) { %>
+                                            <a href="/bookappointments?date=<%= dateString %>&time=<%= time %>&dentist=<%= dentists_list.find(d => d.first_name + ' ' + d.last_name === dentist)?.dentist_id %>" class="btn btn-primary">Book</a>
+
+                                        <% } else { %>
+                                            <button class="btn btn-secondary" disabled>Booked</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+        <% } %>
+    </div>
+</body>
 </html>
