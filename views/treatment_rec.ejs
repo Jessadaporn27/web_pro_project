@@ -1,4 +1,87 @@
 <%- include('head', { Title: "บันทึกการรักษา" }) %>
+<style>
+    .container {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        margin-top: 50px;
+        max-width: 800px;
+    }
+
+    h2 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-primary:active {
+        background-color: #1c6ea4;
+    }
+
+    .form-horizontal {
+        margin-top: 20px;
+    }
+
+    .form-horizontal .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-horizontal .form-group label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .form-horizontal .form-group input,
+    .form-horizontal .form-group textarea,
+    .form-horizontal .form-group select {
+        width: 100%;
+    }
+
+    .form-horizontal .form-group input[type="date"] {
+        padding: 8px;
+    }
+</style>
+
 <body>
     <div class="container mt-5">
         <h2>Treatment Record</h2>
@@ -16,7 +99,7 @@
             
             <div class="form-group">
                 <label for="diagnosis">Diagnosis:</label>
-                <textarea class="form-control" id="diagnosis" name="diagnosis" required></textarea>
+                <textarea class="form-control" id="diagnosis" name="diagnosis" rows="4" required></textarea>
             </div>
             
             <div class="form-group">
@@ -26,7 +109,7 @@
             
             <div class="form-group">
                 <label for="treatment_details">Treatment Details:</label>
-                <textarea class="form-control" id="treatment_details" name="treatment_details" required></textarea>
+                <textarea class="form-control" id="treatment_details" name="treatment_details" rows="4" required></textarea>
             </div>
             
             <div class="form-group">
