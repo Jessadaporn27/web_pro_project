@@ -4,12 +4,10 @@
     <div class="container">
         <h1>Appointment List</h1>
 
-        <!-- ✅ ปุ่มเปิดฟอร์มเพิ่มการนัดหมาย -->
         <div class="mb-3">
             <button class="btn btn-success" id="addAppointmentBtn">Add Appointment</button>
         </div>
 
-        <!-- ✅ ฟอร์มเพิ่มการนัดหมาย (ซ่อนอยู่) -->
         <div id="addAppointmentForm" class="card p-3 mb-4" style="display: none;">
             <h3>Add New Appointment</h3>
             <form id="appointmentForm">
@@ -87,7 +85,7 @@
                                         <th>Appointment Time</th>
                                         <th>Status</th>
                                         <th>Notes</th>
-                                        <th>Actions</th> <!-- ✅ เพิ่มคอลัมน์ใหม่ -->
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -133,18 +131,16 @@
             e.preventDefault();
 
             let formData = $(this).serialize();
-            console.log("Form Data Sent:", formData); // ✅ ดูค่าที่ส่งไปยังเซิร์ฟเวอร์
+            console.log("Form Data Sent:", formData);
 
             $.post("/addAppointment", formData, function (response) {
                 alert(response.message);
                 location.reload();
             }).fail(function (xhr) {
-                alert("Error adding appointment: " + xhr.responseText); // ✅ แสดง error message
+                alert("Error adding appointment: " + xhr.responseText);
             });
             });
 
-
-            // ✅ ปุ่ม Delete
             $(".delete-btn").click(function () {
                 const appointment_id = $(this).data("id");
                 if (confirm("Are you sure you want to delete this appointment?")) {
@@ -164,7 +160,7 @@
         });
          $(document).ready(function () {
             $(".status-select").each(function () {
-                updateStatusColor($(this)); // ตั้งค่าสีเริ่มต้น
+                updateStatusColor($(this));
             });
 
             $(".status-select").change(function () {
@@ -177,7 +173,7 @@
                     alert("Error updating status");
                 });
 
-                updateStatusColor($(this)); // เปลี่ยนสีเมื่อเปลี่ยนสถานะ
+                updateStatusColor($(this));
             });
 
             function updateStatusColor(selectElement) {
@@ -195,7 +191,7 @@
         });
         $(document).ready(function () {
             $(".status-select").each(function () {
-                updateStatusColor($(this)); // ตั้งค่าสีเริ่มต้น
+                updateStatusColor($(this));
             });
 
             $(".status-select").change(function () {
@@ -207,7 +203,7 @@
                     alert("Error updating status");
                 });
 
-                updateStatusColor($(this)); // เปลี่ยนสีเมื่อเปลี่ยนสถานะ
+                updateStatusColor($(this));
             });
 
             function updateStatusColor(selectElement) {
