@@ -4,8 +4,11 @@
     <div class="container mt-5">
         <h2>Confirm Appointment</h2>
     
-        <p>Are you sure you want to book an appointment on <strong><%= appointment_date %></strong>?</p>
-    
+        <p>Are you sure you want to book an appointment on <strong><%= appointment_date %></strong> at <strong><%= appointment_time %></strong>?</p>
+
+        <!-- แสดงชื่อหมอเฉยๆ -->
+        <p><strong>Dentist:</strong> <%= dentist ? dentist.first_name + ' ' + dentist.last_name : 'Not Selected' %></p>
+
         <form action="/confirmbooking" method="post">
             <!-- เลือกลูกค้า -->
             <div class="form-group">
@@ -18,14 +21,17 @@
                     <% }); %>
                 </select>
             </div>
-    
+            <div class="form-group">
+                <label for="notes">Notes:</label>
+                <input type="text" class="form-control" id="notes" name="notes">
+            </div>
+            <!-- ส่งค่าที่ซ่อนอยู่ -->
+            <input type="hidden" name="dentist_id" value="<%= dentist ? dentist.dentist_id : '' %>">
             <input type="hidden" name="appointment_date" value="<%= appointment_date %>">
-    
+            <input type="hidden" name="appointment_time" value="<%= appointment_time %>">
+
             <button type="submit" class="btn btn-primary">Confirm Booking</button>
         </form>
     </div>
-    
-    
-    
 </body>
 </html>
