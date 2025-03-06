@@ -413,11 +413,13 @@ app.get('/regappointments', function (req, res) {
 });
 
 
-
-
 app.get('/bookappointments', function (req, res) {
-    let appointment_date = req.query.date; // รับวันที่จาก query parameter
+    let appointment_date = req.query.date;
+    let appointment_time = req.query.time;
+    let dentist_id = req.query.dentist; // ตอนนี้ได้เป็น dentist_id ถูกต้องแล้ว
+
     let sql_customers = `SELECT customer_id, first_name, last_name FROM customers;`;
+    let sql_dentist = `SELECT dentist_id, first_name, last_name FROM dentists WHERE dentist_id = ?;`;
 
     db.all(sql_customers, [], (err, customers) => {
         if (err) {
@@ -425,21 +427,43 @@ app.get('/bookappointments', function (req, res) {
             return res.status(500).send("Error fetching customer list.");
         }
 
-        res.render('bookappointments', { session: req.session || {} , customers,  appointment_date });
+        db.get(sql_dentist, [dentist_id], (err, dentist) => {
+            if (err) {
+                console.error("Error fetching dentist:", err.message);
+                return res.status(500).send("Error fetching dentist.");
+            }
+
+            res.render('bookappointments', { 
+                session: req.session || {}, 
+                customers, 
+                dentist, 
+                appointment_date, 
+                appointment_time
+            });
+        });
     });
 });
 
-app.post('/confirmbooking', function (req, res) {
-    let appointmentDate = req.body.appointment_date;
-    let sql = `INSERT INTO appointments (appointment_date) VALUES (?);`;
 
-    db.run(sql, [customer_id, dentist_id, 1, appointment_date, appointment_time, 'Scheduled'], function (err) {        if (err) {
+app.post('/confirmbooking', function (req, res) {
+    let { customer_id, appointment_date, dentist_id, appointment_time, notes} = req.body;
+
+    if (!customer_id || !appointment_date || !dentist_id || !appointment_time) {
+        return res.status(400).send("Missing required fields.");
+    }
+
+    const sql = `INSERT INTO appointments (customer_id, dentist_id, employee_id, appointment_date, appointment_time, status, notes) 
+                 VALUES (?, ?, ?, ?, ?, 'Scheduled',?);`;
+
+    db.run(sql, [customer_id, dentist_id, 1, appointment_date, appointment_time, notes], function (err) {
+        if (err) {
             console.error("Error booking appointment:", err.message);
             return res.status(500).send("Error booking appointment.");
         }
-        res.redirect('/regappointments');// กลับไปหน้า appointments
+        res.redirect('/regappointments'); // ✅ กลับไปหน้าดูนัดหมาย
     });
 });
+
 
 
 app.post('/send-notification', (req, res) => {
