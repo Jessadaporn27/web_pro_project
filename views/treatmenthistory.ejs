@@ -1,0 +1,37 @@
+<%- include("head", { Title: "Treatment History" }) %>
+<body>
+    <div class="container">
+        <h1>Treatment History</h1>
+
+        <div id="historyContainer">
+            <% history.forEach((record) => { %>
+                <div class="card mt-3 treatment-card" data-dentist="<%= record.dentist_id %>">
+                    <div class="card-header bg-info text-white">
+                        <strong>Dentist:</strong> <%= record.dentist_name %>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Patient:</strong> <%= record.customer_name %></p>
+                        <p><strong>Date:</strong> <%= record.treatment_date %></p>
+                        <p><strong>Diagnosis:</strong> <%= record.diagnosis %></p>
+                        <p><strong>FDI:</strong> <%= record.FDI %></p>
+                        <p><strong>Details:</strong> <%= record.treatment_details %></p>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("dentistFilter").addEventListener("change", function() {
+            let selectedDentist = this.value;
+            document.querySelectorAll(".treatment-card").forEach(card => {
+                if (selectedDentist === "all" || card.getAttribute("data-dentist") === selectedDentist) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<%- include("head", {Title: "Dentist Appointments"}) %>
+
+<body>
+    <div class="container">
+        <h1>Appointment List</h1>
+
+        <div class="mb-3">
+            <button class="btn btn-success" id="addAppointmentBtn">Add Appointment</button>
+        </div>
+
+        <div id="addAppointmentForm" class="card p-3 mb-4" style="display: none;">
+            <h3>Add New Appointment</h3>
+            <form id="appointmentForm">
+                <div class="mb-3">
+                    <label>Date:</label>
+                    <input type="date" class="form-control" name="appointment_date" required>
+                </div>
+                <div class="mb-3">
+                    <label>Time:</label>
+                    <input type="time" class="form-control" name="appointment_time" required>
+                </div>
+                <div class="mb-3">
+                    <label>Customer Name:</label>
+                    <select class="form-control" name="customer_id" required>
+                        <% customers.forEach((customer) => { %>
+                            <option value="<%= customer.customer_id %>">
+                                <%= customer.first_name %> <%= customer.last_name %>
+                            </option>
+                        <% }); %>
+                    </select>                    
+                </div>                
+                <div class="mb-3">
+                    <label>Dentist:</label>
+                    <select class="form-control" name="dentist_id" required>
+                        <% if (typeof dentists !== "undefined" && Array.isArray(dentists)) { %>
+                            <% dentists.forEach((dentist) => { %>
+                                <option value="<%= dentist.dentist_id %>"><%= dentist.first_name %> <%= dentist.last_name %></option>
+                            <% }); %>
+                        <% } else { %>
+                            <option disabled>No dentists available</option>
+                        <% } %>
+                    </select>
+                    
+                </div>
+                <div class="mb-3">
+                    <label>Employees:</label>
+                    <select class="form-control" name="employee_id" required> 
+                        <% employees.forEach((employee) => { %>
+                            <option value="<%= employee.employee_id %>"><%= employee.first_name %> <%= employee.last_name %></option>
+                        <% }); %>
+                    </select>
+                </div>                
+                <div class="mb-3">
+                    <label>Notes</label>
+                    <input type="text" class="form-control" name="notes">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Appointment</button>
+                <button type="button" class="btn btn-secondary" id="cancelAddAppointment">Cancel</button>
+            </form>
+        </div>
+
+        <% 
+            let groupedByDate = {};
+            data.forEach((item) => {
+                if (!groupedByDate[item.appointment_date]) {
+                    groupedByDate[item.appointment_date] = {};
+                }
+                if (!groupedByDate[item.appointment_date][item.dentist_name]) {
+                    groupedByDate[item.appointment_date][item.dentist_name] = [];
+                }
+                groupedByDate[item.appointment_date][item.dentist_name].push(item);
+            });
+        %>
+
+        <% Object.keys(groupedByDate).forEach((date) => { %>
+            <div class="mt-4">
+                <h3 class="text-primary">📅 Date: <%= date %></h3>
+                
+                <% Object.keys(groupedByDate[date]).forEach((dentist) => { %>
+                    <div class="card mt-3">
+                        <div class="card-header bg-info text-white">
+                            🦷 Dentist: <%= dentist %>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Appointment ID</th>
+                                        <th>Customer Name</th>
+                                        <th>Appointment Time</th>
+                                        <th>Status</th>
+                                        <th>Notes</th>
+                                        <th>Delete</th> <!-- ✅ เพิ่มคอลัมน์ใหม่ -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% groupedByDate[date][dentist].forEach((item) => { %>
+                                        <tr id="appointment-<%= item.appointment_id %>">
+                                            <td><%= item.appointment_id %></td>
+                                            <td><%= item.customer_name %></td>
+                                            <td><%= item.appointment_time %></td>
+                                            <td>
+                                            <select class="form-control status-select" data-id="<%= item.appointment_id %>">
+                                                <option value="Scheduled" class="text-primary" <%= item.status === 'Scheduled' ? 'selected' : '' %>>Scheduled</option>
+                                                <option value="Completed" class="text-success" <%= item.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+                                                <option value="Cancelled" class="text-danger" <%= item.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                            </select>
+                                            </td>
+                                            <td><%= item.notes %></td>
+                                            <td>
+                                                <button class="btn btn-danger btn-sm delete-btn" data-id="<%= item.appointment_id %>">Delete</button>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% }); %>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // ✅ แสดง/ซ่อนฟอร์มเพิ่มการนัดหมาย
+            $("#addAppointmentBtn").click(function () {
+                $("#addAppointmentForm").slideDown();
+            });
+
+            $("#cancelAddAppointment").click(function () {
+                $("#addAppointmentForm").slideUp();
+            });
+
+            $("#appointmentForm").submit(function (e) {
+            e.preventDefault();
+
+            let formData = $(this).serialize();
+            console.log("Form Data Sent:", formData);
+
+            $.post("/addAppointment", formData, function (response) {
+                alert(response.message);
+                location.reload();
+            }).fail(function (xhr) {
+                alert("Error adding appointment: " + xhr.responseText);
+            });
+            });
+
+            $(".delete-btn").click(function () {
+                const appointment_id = $(this).data("id");
+                if (confirm("Are you sure you want to delete this appointment?")) {
+                    $.ajax({
+                        url: "/deleteAppointment/" + appointment_id,
+                        type: "DELETE",
+                        success: function (response) {
+                            alert(response.message);
+                            $("#appointment-" + appointment_id).remove();
+                        },
+                        error: function () {
+                            alert("Error deleting appointment");
+                        }
+                    });
+                }
+            });
+        });
+         $(document).ready(function () {
+            $(".status-select").each(function () {
+                updateStatusColor($(this));
+            });
+
+            $(".status-select").change(function () {
+                const appointment_id = $(this).data("id");
+                const status = $(this).val();
+
+                $.post("/updateStatusAppointments", { appointment_id, status }, function (response) {
+                    alert(response.message);
+                }).fail(function () {
+                    alert("Error updating status");
+                });
+
+                updateStatusColor($(this));
+            });
+
+            function updateStatusColor(selectElement) {
+                const selectedOption = selectElement.find("option:selected");
+                selectElement.removeClass("text-primary text-success text-danger");
+                
+                if (selectedOption.val() === "Completed") {
+                    selectElement.addClass("text-success");
+                } else if (selectedOption.val() === "Cancelled") {
+                    selectElement.addClass("text-danger");
+                } else {
+                    selectElement.addClass("text-primary");
+                }
+            }
+        });
+        $(document).ready(function () {
+            $(".status-select").each(function () {
+                updateStatusColor($(this));
+            });
+
+            $(".status-select").change(function () {
+                const appointment_id = $(this).data("id");
+                const status = $(this).val();
+
+                $.post("/updateStatusAppointments", { appointment_id, status }, function (response) {
+                }).fail(function () {
+                    alert("Error updating status");
+                });
+
+                updateStatusColor($(this));
+            });
+
+            function updateStatusColor(selectElement) {
+                const selectedOption = selectElement.find("option:selected");
+                selectElement.removeClass("text-primary text-success text-danger");
+                
+                if (selectedOption.val() === "Completed") {
+                    selectElement.addClass("text-success");
+                } else if (selectedOption.val() === "Cancelled") {
+                    selectElement.addClass("text-danger");
+                } else {
+                    selectElement.addClass("text-primary");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
