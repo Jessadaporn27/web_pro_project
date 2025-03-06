@@ -420,12 +420,13 @@ app.get('/regappointments', function (req, res) {
 app.get('/bookappointments', function (req, res) {
     let appointment_date = req.query.date;
     let appointment_time = req.query.time;
-    let dentist_id = req.query.dentist; // ตอนนี้ได้เป็น dentist_id ถูกต้องแล้ว
+    let dentist_id = req.query.dentist;
+    let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
 
-    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers;`;
+    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`; // ✅ ดึงลูกค้าคนแรกของ User
     let sql_dentist = `SELECT dentist_id, first_name, last_name FROM dentists WHERE dentist_id = ?;`;
 
-    db.all(sql_customers, [], (err, customers) => {
+    db.all(sql_customers, [user_id], (err, customers) => {  
         if (err) {
             console.error("Error fetching customers:", err.message);
             return res.status(500).send("Error fetching customer list.");
@@ -439,7 +440,7 @@ app.get('/bookappointments', function (req, res) {
 
             res.render('bookappointments', { 
                 session: req.session || {}, 
-                customers, 
+                customers,  
                 dentist, 
                 appointment_date, 
                 appointment_time
@@ -447,6 +448,8 @@ app.get('/bookappointments', function (req, res) {
         });
     });
 });
+
+
 
 
 app.post('/confirmbooking', function (req, res) {
@@ -465,6 +468,47 @@ app.post('/confirmbooking', function (req, res) {
             return res.status(500).send("Error booking appointment.");
         }
         res.redirect('/regappointments'); // ✅ กลับไปหน้าดูนัดหมาย
+    });
+});
+
+app.get('/appointmentdetails', function (req, res) {
+    let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
+
+    if (!user_id) {
+        return res.status(403).send("Unauthorized: Please log in first.");
+    }
+
+    let sql_customer = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`;
+
+    db.get(sql_customer, [user_id], (err, customer) => {
+        if (err) {
+            console.error("Error fetching customer:", err.message);
+            return res.status(500).send("Error fetching customer.");
+        }
+        if (!customer) {
+            return res.status(404).send("No customer profile found for this user.");
+        }
+
+        let sql_appointments = `
+            SELECT appointments.*, 
+                   dentists.first_name AS dentist_first_name, 
+                   dentists.last_name AS dentist_last_name, 
+                   employees.first_name AS employee_first_name, 
+                   employees.last_name AS employee_last_name
+            FROM appointments
+            JOIN dentists ON appointments.dentist_id = dentists.dentist_id
+            JOIN employees ON appointments.employee_id = employees.employee_id
+            WHERE appointments.customer_id = ?;
+        `;
+
+        db.all(sql_appointments, [customer.customer_id], (err, appointments) => {
+            if (err) {
+                console.error("Error fetching appointment details:", err.message);
+                return res.status(500).send("Error fetching appointment details.");
+            }
+
+            res.render('appointmentdetails', { session: req.session || {}, customer, appointments });
+        });
     });
 });
 

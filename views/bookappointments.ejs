@@ -6,21 +6,15 @@
     
         <p>Are you sure you want to book an appointment on <strong><%= appointment_date %></strong> at <strong><%= appointment_time %></strong>?</p>
 
-        <!-- แสดงชื่อหมอเฉยๆ -->
         <p><strong>Dentist:</strong> <%= dentist ? dentist.first_name + ' ' + dentist.last_name : 'Not Selected' %></p>
 
         <form action="/confirmbooking" method="post">
             <!-- เลือกลูกค้า -->
             <div class="form-group">
-                <label for="customer_id">Select Customer:</label>
-                <select class="form-control" id="customer_id" name="customer_id" required>
-                    <% customers.forEach((customer) => { %>
-                        <option value="<%= customer.customer_id %>">
-                            <%= customer.first_name %> <%= customer.last_name %>
-                        </option>
-                    <% }); %>
-                </select>
+                <label>Customer:</label>
+                <p><strong><%= customers.length > 0 ? customers[0].first_name + ' ' + customers[0].last_name : 'No Customer Found' %></strong></p>
             </div>
+            <input type="hidden" name="customer_id" value="<%= customers.length > 0 ? customers[0].customer_id : '' %>">                      
             <div class="form-group">
                 <label for="notes">Notes:</label>
                 <input type="text" class="form-control" id="notes" name="notes">
