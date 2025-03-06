@@ -10,7 +10,7 @@
     }
 
     h1 {
-        color: #2c3e50; /* สีเข้มเพื่อความชัดเจน */
+        color: #2c3e50;
         text-align: center;
         margin-bottom: 20px;
     }
@@ -22,7 +22,7 @@
     form {
         display: flex;
         flex-direction: column;
-        gap: 15px; /* ระยะห่างระหว่างองค์ประกอบ */
+        gap: 15px;
     }
 
     form p {
@@ -40,12 +40,12 @@
     }
 
     .ed:focus {
-        border-color: #3498db; /* สีฟ้าเมื่อโฟกัส */
+        border-color: #3498db;
         box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
     }
 
     .btn-primary {
-        background-color: #3498db; /* สีฟ้าสดใส */
+        background-color: #3498db;
         border: none;
         padding: 10px 20px;
         font-size: 16px;
@@ -57,7 +57,7 @@
     }
 
     .btn-primary:hover {
-        background-color: #2980b9; /* สีฟ้าเข้มเมื่อ hover */
+        background-color: #2980b9;
     }
 
     .btn-primary[style*="background-color: white"] {
@@ -67,13 +67,13 @@
     }
 
     .btn-primary[style*="background-color: white"]:hover {
-        background-color: #f1f1f1; /* สีพื้นหลังเมื่อ hover */
+        background-color: #f1f1f1;
     }
 
     .button-container {
         display: flex;
-        gap: 10px; /* ระยะห่างระหว่างปุ่ม */
-        justify-content: flex-end; /* จัดปุ่มไปทางขวา */
+        gap: 10px;
+        justify-content: flex-end;
     }
 </style>
 
@@ -115,7 +115,7 @@
 
     <script>
         function handleFormSubmit(event) {
-            event.preventDefault(); // ป้องกันการส่งฟอร์มโดยปกติ
+            event.preventDefault();
 
             // แสดง alert
             alert("บันทึกข้อมูลสำเร็จ");
