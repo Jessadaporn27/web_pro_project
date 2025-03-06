@@ -536,7 +536,7 @@ app.get('/appointmentdetails', function (req, res) {
     let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
 
     if (!user_id) {
-        return res.status(403).send("Unauthorized: Please log in first.");
+        return res.redirect('/login');
     }
 
     let sql_customer = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`;
