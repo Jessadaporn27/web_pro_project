@@ -42,12 +42,12 @@ app.get('/', function (req, res) {
     res.render('home', { session: req.session || {} });
 });
 
-app.get('/register', function (req, res) {
+/* app.get('/register', function (req, res) {
     res.render('register');
-});
+}); */
 
 app.get('/login', function (req, res) {
-    res.render('login');
+    res.render('login',{ session: req.session || {} });
 });
 
 app.get('/login_get', function (req, res) {
@@ -243,7 +243,7 @@ app.get('/get_edit', function (req, res) {
             return console.error(err.message);
         }
         console.log(`success`);
-        res.render('edit', { data: rows });
+        res.render('edit', { data: rows ,session: req.session || {} });
     });
 });
 
@@ -378,6 +378,10 @@ app.delete('/deleteAppointment/:id', (req, res) => {
 
 
 app.get('/regappointments', function (req, res) {
+    if (!req.session.user_id || !req.session.customer_id) {
+        return res.redirect('/login'); // ถ้ายังไม่ได้ล็อกอิน ให้กลับไปหน้า login
+    }
+
     const sql = `
         SELECT appointments.*, 
                customers.first_name AS customer_first_name, 
