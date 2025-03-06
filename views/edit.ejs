@@ -1,26 +1,145 @@
 <%- include("headtable") %>
+<style>
+    .container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        max-width: 600px;
+    }
+
+    h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .table-container {
+        margin-top: 20px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    form p {
+        margin: 0;
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .ed {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        font-size: 16px;
+    }
+
+    .ed:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        color: #ffffff;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-primary[style*="background-color: white"] {
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid #ced4da;
+    }
+
+    .btn-primary[style*="background-color: white"]:hover {
+        background-color: #f1f1f1;
+    }
+
+    .button-container {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+</style>
 
 <body>
     <div class="container">
         <h1>Edit Customer</h1>
         <div class="table-container">
             <% data.forEach((item) => { %>
-                <form action="/save" method="get">
+                <form action="/save" method="get" onsubmit="handleFormSubmit(event)">
                     <input type="hidden" name="id" value="<%= item.customer_id %>">
                     <p>ID: <%= item.customer_id %></p>
                     <p>Registration Date: <%= item.registration_date %></p>
-                    <p>User ID: </p><input name="uid" type="text" class="ed" value="<%= item.user_id %>">
-                    <p>First Name: </p><input name="fname" type="text" class="ed" value="<%= item.first_name %>">
-                    <p>Last Name: </p><input name="lname" type="text" class="ed" value="<%= item.last_name %>">
-                    <p>Phone: </p><input name="num" type="text" class="ed" value="<%= item.phone %>">
-                    <p>Email: </p><input name="email" type="text" class="ed" value="<%= item.email %>">
-                    <p>Address: </p><input name="add" type="text" class="ed" value="<%= item.address %>">
-                    <p>Date of Birth: </p><input name="date" type="date" class="ed" value="<%= item.dob %>">
-                    <p>Gender: </p><input name="gen" type="text" class="ed" value="<%= item.gender %>"> <br>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <a href="/editcustomers"><button type="button" class="btn btn-primary" style="background-color: white; color: black;">Back</button></a>
+                    <p>User ID:</p>
+                    <input name="uid" type="text" class="ed" value="<%= item.user_id %>">
+                    <p>First Name:</p>
+                    <input name="fname" type="text" class="ed" value="<%= item.first_name %>">
+                    <p>Last Name:</p>
+                    <input name="lname" type="text" class="ed" value="<%= item.last_name %>">
+                    <p>Phone:</p>
+                    <input name="num" type="text" class="ed" value="<%= item.phone %>">
+                    <p>Email:</p>
+                    <input name="email" type="text" class="ed" value="<%= item.email %>">
+                    <p>Address:</p>
+                    <input name="add" type="text" class="ed" value="<%= item.address %>">
+                    <p>Date of Birth:</p>
+                    <input name="date" type="date" class="ed" value="<%= item.dob %>">
+                    <p>Gender:</p>
+                    <input name="gen" type="text" class="ed" value="<%= item.gender %>">
+                    <div class="button-container">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a href="/editcustomers">
+                            <button type="button" class="btn btn-primary" style="background-color: white; color: black;">Back</button>
+                        </a>
+                    </div>
                 </form>
             <% }); %>
         </div>
     </div>
+
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            // แสดง alert
+            alert("บันทึกข้อมูลสำเร็จ");
+
+            // ส่งฟอร์มโดยใช้ JavaScript
+            const form = event.target;
+            const formData = new FormData(form);
+            const queryString = new URLSearchParams(formData).toString();
+
+            // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+            fetch(form.action + "?" + queryString, {
+                method: "GET",
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = "/editcustomers";
+                    } else {
+                        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                });
+        }
+    </script>
 </body>

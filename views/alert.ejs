@@ -1,4 +1,78 @@
 <%- include("headtable") %>
+<style>
+    .container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+    }
+
+    h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    .table th {
+        background-color: #3498db;
+        color: #ffffff;
+    }
+
+    .table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .table tr:hover {
+        background-color: #e2e2e2;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        border: none;
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 5px;
+        cursor: pointer;
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 5px;
+        cursor: not-allowed;
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+</style>
 
 <body>
     <div class="container">
@@ -22,7 +96,7 @@
                         <td><%= item.appointment_id %></td>
                         <td><%= item.customer_id %></td>
                         <td><%= item.first_name %> <%= item.last_name %></td>
-                        <td><%= item.appointment_date %>|   <%= item.appointment_time %></td> <!-- เวลานัดหมอ -->
+                        <td><%= item.appointment_date %> | <%= item.appointment_time %></td>
                         <td><%= item.status %></td>
                         <td><%= item.notes %></td>
                         <td>
@@ -32,7 +106,6 @@
                                 <button type="button" class="btn btn-primary" onclick="sendAlert(<%= item.customer_id %>, <%= item.appointment_id %>, this)">Alert</button>
                             <% } %>
                         </td>
-                        
                     </tr>
                     <% }); %>
                 </tbody>
@@ -64,6 +137,5 @@
             .catch(error => console.error('Error:', error));
         }
     </script>
-    
 </body>
 </html>
