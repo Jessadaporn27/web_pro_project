@@ -598,25 +598,6 @@ app.post('/send-notification', (req, res) => {
     });
 });
 
-/* app.get('/get-notifications', (req, res) => {
-    if (!req.session.user_id) {
-        return res.status(403).json({ success: false, message: "กรุณาเข้าสู่ระบบ" });
-    }
-
-    const sql = "SELECT * FROM notifications WHERE customer_id = ? ORDER BY created_at DESC";
-    db.all(sql, [req.session.user_id], (err, results) => {
-        if (err) {
-            return res.status(500).json({ success: false, error: err.message });
-        }
-
-        // 🔹 อัปเดตสถานะว่าเห็นแล้ว
-        const updateSql = "UPDATE notifications SET seen = 1 WHERE customer_id = ?";
-        db.run(updateSql, [req.session.user_id]);
-
-        res.json(results);
-    });
-}); */
-
 app.get('/bills', (req, res) => {
     if (!req.session.user_id || !req.session.customer_id) {
         return res.redirect('/login'); // ถ้ายังไม่ได้ล็อกอิน ให้กลับไปหน้า login
@@ -681,9 +662,29 @@ app.post('/mark-as-read', (req, res) => {
 
 
 
-app.get('/treatment_rec', (req,res) => {
-    res.render('treatment_rec',{session: req.session || {}});
-})
+app.get('/treatment_rec', async (req, res) => {
+    try {
+        const sqlDentists = `SELECT dentist_id, first_name, last_name FROM dentists;`;
+        const sqlCustomers = `SELECT customer_id, first_name, last_name FROM customers;`;
+
+        // ✅ ใช้ Promise.all() ให้ถูกต้อง
+        const [dentistResults, customerResults] = await Promise.all([
+            new Promise((resolve, reject) => db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows))),
+            new Promise((resolve, reject) => db.all(sqlCustomers, [], (err, rows) => err ? reject(err) : resolve(rows)))
+        ]);
+
+        res.render('treatment_rec', { 
+            session: req.session || {}, 
+            dentists: dentistResults,
+            customers: customerResults 
+        });
+
+    } catch (err) {
+        console.error("Error fetching treatment record data:", err);
+        res.status(500).send("Database error");
+    }
+});
+
 
 app.get('/savetreatment', function (req, res) {
     let formdata = {
