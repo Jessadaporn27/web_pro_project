@@ -1,4 +1,4 @@
-<%- include("head", {Title: "View Appointments"}) %>
+<%- include("head", {Title: "Dentist Appointments"}) %>
 
 <body>
     <div class="container">
@@ -32,10 +32,15 @@
                 <div class="mb-3">
                     <label>Dentist:</label>
                     <select class="form-control" name="dentist_id" required>
-                        <% dentists.forEach((dentist) => { %>
-                            <option value="<%= dentist.dentist_id %>"><%= dentist.first_name %> <%= dentist.last_name %></option>
-                        <% }); %>
+                        <% if (typeof dentists !== "undefined" && Array.isArray(dentists)) { %>
+                            <% dentists.forEach((dentist) => { %>
+                                <option value="<%= dentist.dentist_id %>"><%= dentist.first_name %> <%= dentist.last_name %></option>
+                            <% }); %>
+                        <% } else { %>
+                            <option disabled>No dentists available</option>
+                        <% } %>
                     </select>
+                    
                 </div>
                 <div class="mb-3">
                     <label>Employees:</label>

@@ -101,7 +101,11 @@
                     <p>Date of Birth:</p>
                     <input name="date" type="date" class="ed" value="<%= item.dob %>">
                     <p>Gender:</p>
-                    <input name="gen" type="text" class="ed" value="<%= item.gender %>">
+                    <select class="form-control" id="gender" name="gen" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
                     <div class="button-container">
                         <button type="submit" class="btn btn-primary">Save</button>
                         <a href="/editcustomers">

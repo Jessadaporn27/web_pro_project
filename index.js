@@ -283,6 +283,67 @@ app.get('/get_delete', function (req, res) {
     });
 });
 
+app.get('/dentistappointments', async function (req, res) {
+    try {
+        let user_id = req.session.user_id; // ดึง user_id จาก session
+        if (!user_id) {
+            return res.redirect('/login'); // ถ้ายังไม่ได้ล็อกอิน ให้กลับไปหน้า login
+        }
+
+        //  ค้นหา dentist_id จาก user_id
+        const sqlDentistId = `SELECT dentist_id FROM dentists WHERE user_id = ? LIMIT 1;`;
+        const dentist = await new Promise((resolve, reject) => {
+            db.get(sqlDentistId, [user_id], (err, row) => err ? reject(err) : resolve(row));
+        });
+
+        if (!dentist) {
+            return res.status(403).send("Unauthorized: No dentist profile found.");
+        }
+
+        let dentist_id = dentist.dentist_id;
+
+        const sqlAppointments = `SELECT 
+            appointments.appointment_id, 
+            customers.first_name || ' ' || customers.last_name AS customer_name,
+            dentists.first_name || ' ' || dentists.last_name AS dentist_name,
+            employees.first_name || ' ' || employees.last_name AS employee_name,
+            appointments.appointment_date,
+            appointments.appointment_time,
+            appointments.status,
+            appointments.notes
+        FROM appointments
+        JOIN customers ON appointments.customer_id = customers.customer_id
+        JOIN dentists ON appointments.dentist_id = dentists.dentist_id
+        JOIN employees ON appointments.employee_id = employees.employee_id
+        WHERE appointments.dentist_id = ?;`; // ✅ แสดงเฉพาะนัดหมายของหมอคนนั้น
+
+        const sqlEmployees = `SELECT employee_id, first_name, last_name FROM employees;`;
+        const sqlCustomers = `SELECT customer_id, first_name, last_name FROM customers;`;
+        const sqlDentists = `SELECT dentist_id, first_name, last_name FROM dentists;`; // ✅ ดึงข้อมูล dentists ทั้งหมด
+
+        const [appointmentResults, employeeResults, customerResults, dentistResults] = await Promise.all([
+            new Promise((resolve, reject) => db.all(sqlAppointments, [dentist_id], (err, rows) => err ? reject(err) : resolve(rows))),
+            new Promise((resolve, reject) => db.all(sqlEmployees, [], (err, rows) => err ? reject(err) : resolve(rows))),
+            new Promise((resolve, reject) => db.all(sqlCustomers, [], (err, rows) => err ? reject(err) : resolve(rows))),
+            new Promise((resolve, reject) => db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows))) // ✅ ดึง dentists
+        ]);
+
+        res.render('dentistappointments', { 
+            session: req.session || {}, 
+            data: appointmentResults,
+            employees: employeeResults,
+            customers: customerResults,
+            dentists: dentistResults // ✅ ส่ง dentists ไปที่ EJS
+        });
+
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Database error");
+    }
+});
+
+
 app.get('/viewappointments', async function (req, res) {
     try {
         const sqlAppointments = `SELECT 
@@ -420,12 +481,13 @@ app.get('/regappointments', function (req, res) {
 app.get('/bookappointments', function (req, res) {
     let appointment_date = req.query.date;
     let appointment_time = req.query.time;
-    let dentist_id = req.query.dentist; // ตอนนี้ได้เป็น dentist_id ถูกต้องแล้ว
+    let dentist_id = req.query.dentist;
+    let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
 
-    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers;`;
+    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`; // ✅ ดึงลูกค้าคนแรกของ User
     let sql_dentist = `SELECT dentist_id, first_name, last_name FROM dentists WHERE dentist_id = ?;`;
 
-    db.all(sql_customers, [], (err, customers) => {
+    db.all(sql_customers, [user_id], (err, customers) => {  
         if (err) {
             console.error("Error fetching customers:", err.message);
             return res.status(500).send("Error fetching customer list.");
@@ -439,7 +501,7 @@ app.get('/bookappointments', function (req, res) {
 
             res.render('bookappointments', { 
                 session: req.session || {}, 
-                customers, 
+                customers,  
                 dentist, 
                 appointment_date, 
                 appointment_time
@@ -447,6 +509,8 @@ app.get('/bookappointments', function (req, res) {
         });
     });
 });
+
+
 
 
 app.post('/confirmbooking', function (req, res) {
@@ -465,6 +529,47 @@ app.post('/confirmbooking', function (req, res) {
             return res.status(500).send("Error booking appointment.");
         }
         res.redirect('/regappointments'); // ✅ กลับไปหน้าดูนัดหมาย
+    });
+});
+
+app.get('/appointmentdetails', function (req, res) {
+    let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
+
+    if (!user_id) {
+        return res.redirect('/login');
+    }
+
+    let sql_customer = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`;
+
+    db.get(sql_customer, [user_id], (err, customer) => {
+        if (err) {
+            console.error("Error fetching customer:", err.message);
+            return res.status(500).send("Error fetching customer.");
+        }
+        if (!customer) {
+            return res.status(404).send("No customer profile found for this user.");
+        }
+
+        let sql_appointments = `
+            SELECT appointments.*, 
+                   dentists.first_name AS dentist_first_name, 
+                   dentists.last_name AS dentist_last_name, 
+                   employees.first_name AS employee_first_name, 
+                   employees.last_name AS employee_last_name
+            FROM appointments
+            JOIN dentists ON appointments.dentist_id = dentists.dentist_id
+            JOIN employees ON appointments.employee_id = employees.employee_id
+            WHERE appointments.customer_id = ?;
+        `;
+
+        db.all(sql_appointments, [customer.customer_id], (err, appointments) => {
+            if (err) {
+                console.error("Error fetching appointment details:", err.message);
+                return res.status(500).send("Error fetching appointment details.");
+            }
+
+            res.render('appointmentdetails', { session: req.session || {}, customer, appointments });
+        });
     });
 });
 
@@ -615,6 +720,47 @@ app.get('/savetreatment', function (req, res) {
    );
 });
 
+app.get('/treatmenthistory', async function (req, res) {
+    try {
+        let user_id = req.session.user_id;
+        if (!user_id) {
+            return res.redirect('/login');
+        }
+
+        // ดึงรายการหมอทั้งหมด
+        const sqlDentists = `SELECT dentist_id, first_name, last_name FROM dentists;`;
+        const dentists = await new Promise((resolve, reject) => {
+            db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows));
+        });
+
+        // ดึงประวัติการรักษา
+        const sqlHistory = `SELECT 
+            t.treatment_id, 
+            c.first_name || ' ' || c.last_name AS customer_name,
+            d.first_name || ' ' || d.last_name AS dentist_name,
+            t.treatment_date,
+            t.diagnosis,
+            t.FDI,
+            t.treatment_details
+        FROM treatment_rec t
+        JOIN customers c ON t.customer_id = c.customer_id
+        JOIN dentists d ON t.dentist_id = d.dentist_id
+        ORDER BY t.treatment_date DESC;`;
+
+        const treatmentHistory = await new Promise((resolve, reject) => {
+            db.all(sqlHistory, [], (err, rows) => err ? reject(err) : resolve(rows));
+        });
+
+        res.render('treatmenthistory', { 
+            session: req.session || {},
+            dentists: dentists, 
+            history: treatmentHistory
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Database error");
+    }
+});
 
 app.get("/treatment-list", async (req, res) => {
     const db = await openDb();
