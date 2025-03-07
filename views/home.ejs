@@ -26,6 +26,38 @@
       </div>
     </div>
 
+<!-- Add this CSS to ensure consistent behavior -->
+<style>
+  /* Make sure carousel maintains its height */
+  #carouselExampleIndicators .carousel-inner {
+    height: 500px !important;
+  }
+  
+  /* Ensure all carousel items take full height */
+  #carouselExampleIndicators .carousel-item {
+    height: 100%;
+  }
+  
+  /* Ensure images fit properly within their container */
+  #carouselExampleIndicators .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  
+  /* Ensure controls display correctly */
+  #carouselExampleIndicators .carousel-control-prev,
+  #carouselExampleIndicators .carousel-control-next {
+    color: darkslategray;
+  }
+  
+  /* Make sure indicators appear at bottom */
+  #carouselExampleIndicators .carousel-indicators {
+    bottom: 10px;
+  }
+</style>
+    <!-- WELCOME -->
     <div class="card"
       style="padding: 2em; margin-top: 50px; margin-left: auto; margin-right: auto; width:80%; background-color:#e3f2fd; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
       <div class="card-header text-white" style="background-color: #2196F3; border-radius: 10px;">
@@ -51,11 +83,82 @@
         </div>
       </div>
     </div>
-
-    <div class="card"
-      style="padding: 2em; margin: 50px auto; width:80%; background-color:#e3f2fd; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
+    <!-- WHY CHOOSE US -->
+    <div class="card " style="padding: 2em; margin-top: 50px; margin-left: auto; margin-right: auto; width:80% ; background-color:#e3f2fd; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
       <div class="card-header text-white" style="background-color: #2196F3; border-radius: 10px;">
-        <h2>Our Dentists <i class="fas fa-user-md"></i></h2>
+        <h2 >Why Choose Us?<i class="fas fa-tooth"></i></h2>
+      </div>
+      <div class="card-body">
+        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-4 g-2">
+          <div class="col mb-2">
+            <div class="d-flex align-items-center">
+              <div class="d-inline-block cover">
+                  <img src="/image/ui1.png" class="img-fluid rounded-circle m-1 p-1 border border-blue" 
+                       alt="" style="width: 100px; height: 100px; object-fit: cover;border-radius: 100%;object-position: center">
+              </div>
+              <div class="w-100">
+                <div class="p-2 px-3">
+                  <div>
+                      global network 
+                  </div>
+                  <div>
+                    <small>Our dental clinic belongs to the largest ...</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        
+          <!-- Repeat the same structure for all items -->
+          <div class="col mb-2">
+            <div class="d-flex align-items-center">
+              <div class="d-inline-block cover">
+                  <img src="/image/ui2.png" class="img-fluid rounded-circle m-1 p-1 border border-blue" 
+                       alt="" style="width: 100px; height: 100px; object-fit: cover;border-radius: 100%;object-position: center">
+              </div>
+              <div class="w-100">
+                <div class="p-2 px-3">
+                  <div>
+                    <a href="#doctors" title="expert dentists">
+                      expert dentists </a>
+                  </div>
+                  <div>
+                    <small>We have the most outstanding and well-ex ...</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col mb-2">
+            <div class="d-flex align-items-center">
+              <div class="d-inline-block cover">
+                
+                  <img src="/image/ui3.png" class="img-fluid rounded-circle m-1 p-1 border border-blue" 
+                       alt="" style="width: 100px; height: 100px; object-fit: cover;border-radius: 100%;object-position: center">
+                
+              </div>
+              <div class="w-100">
+                <div class="p-2 px-3">
+                  <div>
+                      Best detal product
+                  </div>
+                  <div>
+                    <small>Oue dental products is the lastest ...</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Add the same changes to all other divs -->
+        </div>
+        
+      </div>
+    </div>
+    <!-- OUR DENTIST -->
+    <div class="card" id="doctors"
+    style="padding: 2em; margin: 50px auto; width:80%; background-color:#e3f2fd; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
+    <div class="card-header text-white" style="background-color: #2196F3; border-radius: 10px;">
+      <h2>Our Dentists <i class="fas fa-user-md"></i></h2>
       </div>
       <div class="card-body">
         <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
@@ -81,6 +184,7 @@
                   </div>
                 </div>
               </div>
+              <!-- event -->
             </div>
           </div>
         </div>
