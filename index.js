@@ -178,19 +178,6 @@ app.get('/getcustomers', function (req, res) {
 });
 
 
-
-// app.get('/show', function (req, res) {
-//     const sql = 'SELECT * FROM customers;';
-
-//     db.all(sql, [], (err, results) => {  // ใช้ db.all() เพื่อดึงข้อมูลทุกแถว
-//         if (err) {
-//             console.error(err);
-//             return res.status(500).send("Database error");
-//         }
-//         res.render('show', { data: results }); // ส่งข้อมูลไปที่ view
-//     });
-// });
-
 app.get('/alert', function (req, res) {
     const sql = `
         SELECT 
@@ -267,6 +254,7 @@ app.get('/save', function (req, res) {
             return console.error(err.message);
         }
         console.log(`Row(s) save.`);
+        res.redirect('editcustomers');
     });
 });
 
@@ -280,6 +268,7 @@ app.get('/get_delete', function (req, res) {
             return console.error(err.message);
         }
         console.log(`Row(s) deleted.`);
+        res.redirect('editcustomers');
     });
 });
 
@@ -779,34 +768,6 @@ app.get("/treatment-list", async (req, res) => {
         res.status(500).send("เกิดข้อผิดพลาด");
     }
 });
-/* 
-app.get("/create-bill", async (req, res) => {
-    const db = await openDb();
-
-    try {
-        // ดึงลูกค้าที่มี treatment แต่ยังไม่มีบิลใน service_fees
-        const customers = await db.all(`
-            SELECT DISTINCT c.*
-            FROM customers c
-            JOIN treatment_rec t ON c.customer_id = t.customer_id
-            LEFT JOIN service_fees s ON t.treatment_id = s.treatment_id
-            WHERE s.treatment_id IS NULL;
-        `);
-
-        // ดึงเฉพาะรายการ treatment ที่ยังไม่มีบิลใน service_fees
-        const treatments = await db.all(`
-            SELECT t.*
-            FROM treatment_rec t
-            LEFT JOIN service_fees s ON t.treatment_id = s.treatment_id
-            WHERE s.treatment_id IS NULL;
-        `);
-
-        res.render("create-bill", { customers, treatments }); // ✅ ส่ง treatments ไปด้วย
-    } catch (error) {
-        console.error("❌ Error fetching data:", error);
-        res.status(500).send("Internal Server Error");
-    }
-}); */
 
 
 app.post("/create-bill", async (req, res) => {

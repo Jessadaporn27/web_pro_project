@@ -1,78 +1,4 @@
-<%- include("headtable") %>
-<style>
-    .container {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-top: 20px;
-    }
-
-    h1 {
-        color: #2c3e50;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .table-container {
-        overflow-x: auto;
-    }
-
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    .table th, .table td {
-        padding: 12px;
-        text-align: center;
-        border: 1px solid #ddd;
-    }
-
-    .table th {
-        background-color: #3498db;
-        color: #ffffff;
-    }
-
-    .table tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-
-    .table tr:hover {
-        background-color: #e2e2e2;
-    }
-
-    .btn-primary {
-        background-color: #3498db;
-        border: none;
-        padding: 8px 16px;
-        font-size: 14px;
-        border-radius: 5px;
-        cursor: pointer;
-        color: #ffffff;
-        text-decoration: none;
-    }
-
-    .btn-primary:hover {
-        background-color: #2980b9;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        border: none;
-        padding: 8px 16px;
-        font-size: 14px;
-        border-radius: 5px;
-        cursor: not-allowed;
-        color: #ffffff;
-        text-decoration: none;
-    }
-
-    .btn-secondary:hover {
-        background-color: #5a6268;
-    }
-</style>
+<%- include('headtable', { Title: "แจ้งเตือนใกล้ถึงกำหนด" }) %>
 
 <body>
     <div class="container">
@@ -83,10 +9,10 @@
                     <tr>
                         <th>Appointment ID</th>
                         <th>Customer ID</th>
-                        <th>Name</th>
+                        <th>Customer Name</th>
                         <th>Date</th>
                         <th>Status</th>
-                        <th>Note</th>
+                        <th>Notes</th>
                         <th>Alert</th>
                     </tr>
                 </thead>
