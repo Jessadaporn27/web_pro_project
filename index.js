@@ -12,7 +12,7 @@ const db = new sqlite3.Database('dental_clinic.db', (err) => {
         console.error("Error connecting to database:", err);
     } else {
         console.log("Connected to SQLite database");
-        db.run("PRAGMA journal_mode = WAL;"); // ✅ ใช้ WAL mode
+        db.run("PRAGMA journal_mode = WAL;");
     }
 });
 async function openDb() {
