@@ -8,7 +8,6 @@
             let today = new Date();
             let bookedAppointments = {}; 
 
-            // จัดรูปแบบข้อมูลการจอง
             appointments.forEach((item) => { 
                 if (!bookedAppointments[item.appointment_date]) {
                     bookedAppointments[item.appointment_date] = {};
