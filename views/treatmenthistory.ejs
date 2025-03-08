@@ -2,7 +2,6 @@
 <body>
     <div class="container">
         <h1>Treatment History</h1>
-
         <div id="historyContainer">
             <% history.forEach((record) => { %>
                 <div class="card mt-3 treatment-card" data-dentist="<%= record.dentist_id %>">
@@ -20,18 +19,5 @@
             <% }); %>
         </div>
     </div>
-
-    <script>
-        document.getElementById("dentistFilter").addEventListener("change", function() {
-            let selectedDentist = this.value;
-            document.querySelectorAll(".treatment-card").forEach(card => {
-                if (selectedDentist === "all" || card.getAttribute("data-dentist") === selectedDentist) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
-            });
-        });
-    </script>
 </body>
 </html>
