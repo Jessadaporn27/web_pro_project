@@ -304,17 +304,17 @@ app.get('/dentistappointments', async function (req, res) {
         JOIN customers ON appointments.customer_id = customers.customer_id
         JOIN dentists ON appointments.dentist_id = dentists.dentist_id
         JOIN employees ON appointments.employee_id = employees.employee_id
-        WHERE appointments.dentist_id = ?;`; // ✅ แสดงเฉพาะนัดหมายของหมอคนนั้น
+        WHERE appointments.dentist_id = ?;`; 
 
         const sqlEmployees = `SELECT employee_id, first_name, last_name FROM employees;`;
         const sqlCustomers = `SELECT customer_id, first_name, last_name FROM customers;`;
-        const sqlDentists = `SELECT dentist_id, first_name, last_name FROM dentists;`; // ✅ ดึงข้อมูล dentists ทั้งหมด
+        const sqlDentists = `SELECT dentist_id, first_name, last_name FROM dentists;`; 
 
         const [appointmentResults, employeeResults, customerResults, dentistResults] = await Promise.all([
             new Promise((resolve, reject) => db.all(sqlAppointments, [dentist_id], (err, rows) => err ? reject(err) : resolve(rows))),
             new Promise((resolve, reject) => db.all(sqlEmployees, [], (err, rows) => err ? reject(err) : resolve(rows))),
             new Promise((resolve, reject) => db.all(sqlCustomers, [], (err, rows) => err ? reject(err) : resolve(rows))),
-            new Promise((resolve, reject) => db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows))) // ✅ ดึง dentists
+            new Promise((resolve, reject) => db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows))) 
         ]);
 
         res.render('dentistappointments', { 
@@ -322,7 +322,7 @@ app.get('/dentistappointments', async function (req, res) {
             data: appointmentResults,
             employees: employeeResults,
             customers: customerResults,
-            dentists: dentistResults // ✅ ส่ง dentists ไปที่ EJS
+            dentists: dentistResults 
         });
 
 
@@ -353,7 +353,7 @@ app.get('/viewappointments', async function (req, res) {
         const sqlEmployees = `SELECT employee_id, first_name, last_name FROM employees;`;
         const sqlCustomers = `SELECT customer_id, first_name, last_name FROM customers;`;
 
-        // ✅ ใช้ Promise.all() เพื่อดึงข้อมูลพร้อมกัน
+        // ใช้ Promise.all() เพื่อดึงข้อมูลพร้อมกัน
         const [appointmentResults, dentistResults, employeeResults, customerResults] = await Promise.all([
             new Promise((resolve, reject) => db.all(sqlAppointments, [], (err, rows) => err ? reject(err) : resolve(rows))),
             new Promise((resolve, reject) => db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows))),
@@ -366,7 +366,7 @@ app.get('/viewappointments', async function (req, res) {
             data: appointmentResults,
             dentists: dentistResults,
             employees: employeeResults,
-            customers: customerResults // ✅ ส่ง customers ไปด้วย
+            customers: customerResults 
         });
 
     } catch (err) {
@@ -374,8 +374,6 @@ app.get('/viewappointments', async function (req, res) {
         res.status(500).send("Database error");
     }
 });
-
-
 
 
 app.post('/updateStatusAppointments', function (req, res) {
@@ -404,7 +402,7 @@ app.post('/addAppointment', (req, res) => {
     const sql = `INSERT INTO appointments (customer_id, dentist_id, employee_id, appointment_date, appointment_time, status, notes) 
                  VALUES (?, ?, ?, ?, ?, 'Scheduled', ?)`;
 
-    db.serialize(() => { // ✅ ใช้ serialize() เพื่อล็อกให้คำสั่งรันทีละตัว
+    db.serialize(() => { 
         db.run(sql, [customer_id, dentist_id, employee_id, appointment_date, appointment_time, notes], function (err) {
             if (err) {
                 console.error("Database Error:", err);
@@ -459,7 +457,7 @@ app.get('/regappointments', function (req, res) {
 
             res.render('regappointments', { 
                 session: req.session || {}, 
-                dentists_list,  // ✅ ส่งรายชื่อหมอทั้งหมดไปที่ EJS
+                dentists_list, 
                 appointments 
             }); 
         });
@@ -471,9 +469,9 @@ app.get('/bookappointments', function (req, res) {
     let appointment_date = req.query.date;
     let appointment_time = req.query.time;
     let dentist_id = req.query.dentist;
-    let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
+    let user_id = req.session.user_id; 
 
-    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`; // ✅ ดึงลูกค้าคนแรกของ User
+    let sql_customers = `SELECT customer_id, first_name, last_name FROM customers WHERE user_id = ? LIMIT 1;`; 
     let sql_dentist = `SELECT dentist_id, first_name, last_name FROM dentists WHERE dentist_id = ?;`;
 
     db.all(sql_customers, [user_id], (err, customers) => {  
@@ -517,12 +515,12 @@ app.post('/confirmbooking', function (req, res) {
             console.error("Error booking appointment:", err.message);
             return res.status(500).send("Error booking appointment.");
         }
-        res.redirect('/regappointments'); // ✅ กลับไปหน้าดูนัดหมาย
+        res.redirect('/regappointments'); 
     });
 });
 
 app.get('/appointmentdetails', function (req, res) {
-    let user_id = req.session.user_id; // ✅ ดึง ID ของ User ปัจจุบัน
+    let user_id = req.session.user_id; 
 
     if (!user_id) {
         return res.redirect('/login');
@@ -656,7 +654,6 @@ app.get('/treatment_rec', async (req, res) => {
         const sqlDentists = `SELECT dentist_id, first_name, last_name FROM dentists;`;
         const sqlCustomers = `SELECT customer_id, first_name, last_name FROM customers;`;
 
-        // ✅ ใช้ Promise.all() ให้ถูกต้อง
         const [dentistResults, customerResults] = await Promise.all([
             new Promise((resolve, reject) => db.all(sqlDentists, [], (err, rows) => err ? reject(err) : resolve(rows))),
             new Promise((resolve, reject) => db.all(sqlCustomers, [], (err, rows) => err ? reject(err) : resolve(rows)))
@@ -705,7 +702,7 @@ app.get('/savetreatment', function (req, res) {
                return res.status(500).send("Error saving treatment record");
            }
            console.log('Data inserted successfully');
-           res.redirect('/treatment_rec');  // กลับไปหน้ารายการ treatment
+           res.redirect('/treatment_rec');  
        }
    );
 });
