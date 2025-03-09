@@ -171,7 +171,7 @@ app.get('/getcustomers', function (req, res) {
                 }
 
                 console.log('Customer inserted successfully');
-                res.send('Customer registration successful');
+                res.redirect('registercustomers');
             });
         });
     });
