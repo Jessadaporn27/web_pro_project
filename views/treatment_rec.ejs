@@ -1,4 +1,4 @@
-<%- include('head', { Title: "บันทึกการรักษา" }) %>
+<%- include('head', { Title: "Treatment Records" }) %>
 <style>
     .container {
         background-color: #ffffff;
@@ -85,16 +85,27 @@
 <body>
     <div class="container mt-5">
         <h2>Treatment Record</h2>
-        <form class="form-horizontal" action="/savetreatment" method="get">
-            
+        <form class="form-horizontal" action="/savetreatment" method="get">           
             <div class="form-group">
-                <label for="customer_id">Customer ID:</label>
-                <input type="number" class="form-control" id="customer_id" name="customer_id" required>
+                <label for="customer_id">Customer:</label>
+                <select class="form-control" id="customer_id" name="customer_id" required>
+                    <% customers.forEach((customer) => { %>
+                        <option value="<%= customer.customer_id %>">
+                            <%= customer.first_name %> <%= customer.last_name %>
+                        </option>
+                    <% }); %>
+                </select>
             </div>
-            
+
             <div class="form-group">
-                <label for="dentist_id">Dentist ID:</label>
-                <input type="number" class="form-control" id="dentist_id" name="dentist_id" required>
+                <label for="dentist_id">Dentist:</label>
+                <select class="form-control" id="dentist_id" name="dentist_id" required>
+                    <% dentists.forEach((dentist) => { %>
+                        <option value="<%= dentist.dentist_id %>">
+                            <%= dentist.first_name %> <%= dentist.last_name %>
+                        </option>
+                    <% }); %>
+                </select>
             </div>
             
             <div class="form-group">

@@ -17,7 +17,7 @@ const db = new sqlite3.Database('dental_clinic.db', (err) => {
 });
 async function openDb() {
     return open({
-        filename: "dental_clinic.db", // เปลี่ยนเป็น path ฐานข้อมูลของคุณ
+        filename: "dental_clinic.db",
         driver: sqlite3.Database,
     });
 }
@@ -854,7 +854,7 @@ app.get('/payment/:fee_id', (req, res) => {
 app.post('/process-payment/:fee_id', (req, res) => {
     const feeId = req.params.fee_id;
 
-    console.log("Fake payment processed:", req.body);
+    console.log("Fake payment processed:", req.body);  
 
     const sql = `UPDATE service_fees SET payment_status = 'Paid' WHERE fee_id = ?`;
     db.run(sql, [feeId], (err) => {
